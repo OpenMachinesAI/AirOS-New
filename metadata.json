@@ -1,0 +1,10 @@
+{
+  "name": "Airo Voice Assistant",
+  "description": "A voice-activated AI assistant with animated eyes, powered by Gemini Live API.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera",
+    "geolocation",
+    "bluetooth"
+  ]
+}
