@@ -3,7 +3,10 @@ import fs from 'fs';
 import path from 'path';
 
 const projectRoot = process.cwd();
-const cloudflaredBinary = '/Users/alexrose/.homebrew/opt/cloudflared/bin/cloudflared';
+const cloudflaredBinary =
+  process.env.CLOUDFLARED_BIN ||
+  process.env.AIRO_CLOUDFLARED_BIN ||
+  '/usr/bin/cloudflared';
 const publicUrlPath = path.resolve(projectRoot, '.current-public-url');
 const currentServerUrlPath = path.resolve(projectRoot, '.current-server-url');
 const gistUpdaterScript = path.resolve(projectRoot, 'scripts/update-gist-latest-url.mjs');
