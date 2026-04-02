@@ -15,8 +15,9 @@ What deploy:pi now does:
 - Reads .env.local and environment variables
 - Runs git fetch --all --prune and git pull --ff-only
 - Installs dependencies with npm ci when package-lock.json exists, otherwise npm install
+- Builds the app bundle with npm run build before restarting services
 - Ensures two systemd services exist on OPS:
-  - preview service for the HTTPS Airo server
+  - preview service for the local Airo preview server
   - tunnel service for the Cloudflare tunnel
 - Restarts both services
 - Waits for a valid trycloudflare URL to change
@@ -32,9 +33,10 @@ Default OPS service assumptions:
 - tunnel service name: env AIRO_TUNNEL_SYSTEMD_SERVICE, or "<preview>-tunnel"
 - service user: env AIRO_SERVICE_USER, or $USER, or pi
 - working directory: env AIRO_SERVICE_WORKDIR, or the current repo root
-- preview start command: env AIRO_PREVIEW_EXEC_START, or AIRO_SERVICE_EXEC_START, or /usr/bin/npm run preview:https
+- preview start command: env AIRO_PREVIEW_EXEC_START, or AIRO_SERVICE_EXEC_START, or /usr/bin/npm run preview -- --host 0.0.0.0 --port 3000
 - tunnel start command: env AIRO_TUNNEL_EXEC_START, or /usr/bin/node <repo>/scripts/start-public-tunnel.mjs
 - cloudflared binary: env CLOUDFLARED_BIN, or AIRO_CLOUDFLARED_BIN, or /usr/bin/cloudflared
+- local tunnel target URL: env AIRO_TUNNEL_TARGET_URL, or AIRO_LOCAL_ORIGIN, or http://127.0.0.1:3000
 
 Important runtime files already used by the repo:
 - .current-public-url
@@ -45,6 +47,7 @@ Important runtime files already used by the repo:
 Cloudflare / Gist notes:
 - scripts/start-public-tunnel.mjs writes the latest public URL
 - scripts/start-public-tunnel.mjs now supports CLOUDFLARED_BIN / AIRO_CLOUDFLARED_BIN
+- scripts/start-public-tunnel.mjs now supports AIRO_TUNNEL_TARGET_URL / AIRO_LOCAL_ORIGIN
 - scripts/update-gist-latest-url.mjs updates the Gist using GITHUB_TOKEN or GH_TOKEN
 - deploy:pi only updates the Gist when the new URL is a valid https://<name>.trycloudflare.com hostname
 
@@ -54,6 +57,7 @@ Important fix versus the old handoff:
 - the old "service exists" check was replaced with a real unit-file existence check
 - deploy:pi no longer treats any random https URL as a valid Cloudflare result
 - deploy:pi can now show a simple OPS progress window when DISPLAY or WAYLAND_DISPLAY is available
+- OPS now defaults to plain local preview plus Cloudflare HTTPS, instead of relying on the custom local HTTPS preview server
 
 OPS setup note:
 - On a fresh OPS box, deploy:pi will create /etc/systemd/system/<preview>.service if missing
@@ -77,6 +81,7 @@ Known OPS caveats:
 - npm ci will fail if package-lock.json and package.json drift
 - If cloudflared is not installed at /usr/bin/cloudflared, set CLOUDFLARED_BIN explicitly
 - If OPS should use a different start command, set AIRO_PREVIEW_EXEC_START and/or AIRO_TUNNEL_EXEC_START
+- If OPS should tunnel a different local origin, set AIRO_TUNNEL_TARGET_URL
 - If OPS is running headless with no desktop session, the status window will not appear, but deploy still works
 
 If another agent edits this area:

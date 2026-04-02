@@ -38,12 +38,19 @@ const waitForUrlMs = Number(env.AIRO_WAIT_FOR_URL_MS ?? 45000);
 const pollIntervalMs = Number(env.AIRO_URL_POLL_INTERVAL_MS ?? 1000);
 const serviceUser = env.AIRO_SERVICE_USER || env.USER || 'pi';
 const serviceWorkdir = env.AIRO_SERVICE_WORKDIR || projectRoot;
-const previewExecStart = env.AIRO_PREVIEW_EXEC_START || env.AIRO_SERVICE_EXEC_START || '/usr/bin/npm run preview:https';
+const previewExecStart =
+  env.AIRO_PREVIEW_EXEC_START ||
+  env.AIRO_SERVICE_EXEC_START ||
+  '/usr/bin/npm run preview -- --host 0.0.0.0 --port 3000';
 const tunnelExecStart = env.AIRO_TUNNEL_EXEC_START || `/usr/bin/node ${publicTunnelScript}`;
 const cloudflaredBin =
   env.CLOUDFLARED_BIN ||
   env.AIRO_CLOUDFLARED_BIN ||
   '/usr/bin/cloudflared';
+const localOrigin =
+  env.AIRO_TUNNEL_TARGET_URL ||
+  env.AIRO_LOCAL_ORIGIN ||
+  'http://127.0.0.1:3000';
 const showOpsStatusWindow = String(env.AIRO_SHOW_STATUS_WINDOW ?? '1') !== '0';
 
 const readUrl = (filePath) => {
@@ -165,6 +172,7 @@ User=${escapeSystemdValue(serviceUser)}
 WorkingDirectory=${escapeSystemdValue(serviceWorkdir)}
 Environment=NODE_ENV=production
 Environment=CLOUDFLARED_BIN=${escapeSystemdValue(cloudflaredBin)}
+Environment=AIRO_TUNNEL_TARGET_URL=${escapeSystemdValue(localOrigin)}
 ExecStart=${previewExecStart}
 Restart=always
 RestartSec=3
@@ -185,6 +193,7 @@ User=${escapeSystemdValue(serviceUser)}
 WorkingDirectory=${escapeSystemdValue(serviceWorkdir)}
 Environment=NODE_ENV=production
 Environment=CLOUDFLARED_BIN=${escapeSystemdValue(cloudflaredBin)}
+Environment=AIRO_TUNNEL_TARGET_URL=${escapeSystemdValue(localOrigin)}
 ExecStart=${tunnelExecStart}
 Restart=always
 RestartSec=3
@@ -237,6 +246,12 @@ const main = async () => {
     } else {
       run('npm', ['install']);
     }
+  }
+
+  if (fs.existsSync(path.resolve(projectRoot, 'package.json'))) {
+    writeStatusWindow('Building AirOS...', 'Creating the production web bundle for OPS...');
+    console.log('Building AirOS...');
+    run('npm', ['run', 'build']);
   }
 
   if (restartCommand) {

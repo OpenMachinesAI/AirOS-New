@@ -7,6 +7,10 @@ const cloudflaredBinary =
   process.env.CLOUDFLARED_BIN ||
   process.env.AIRO_CLOUDFLARED_BIN ||
   '/usr/bin/cloudflared';
+const tunnelTargetUrl =
+  process.env.AIRO_TUNNEL_TARGET_URL ||
+  process.env.AIRO_LOCAL_ORIGIN ||
+  'https://127.0.0.1:3000';
 const publicUrlPath = path.resolve(projectRoot, '.current-public-url');
 const currentServerUrlPath = path.resolve(projectRoot, '.current-server-url');
 const gistUpdaterScript = path.resolve(projectRoot, 'scripts/update-gist-latest-url.mjs');
@@ -30,7 +34,7 @@ const runGistUpdater = (url) => {
 
 const child = spawn(
   cloudflaredBinary,
-  ['tunnel', '--url', 'https://127.0.0.1:3000', '--no-tls-verify'],
+  ['tunnel', '--url', tunnelTargetUrl, ...(tunnelTargetUrl.startsWith('https://') ? ['--no-tls-verify'] : [])],
   {
     cwd: projectRoot,
     stdio: ['ignore', 'pipe', 'pipe'],
