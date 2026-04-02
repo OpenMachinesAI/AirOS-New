@@ -30,6 +30,9 @@ const autoInstall = String(env.AIRO_AUTO_INSTALL ?? '1') !== '0';
 const updateGist = String(env.AIRO_UPDATE_GIST ?? '1') !== '0';
 const waitForUrlMs = Number(env.AIRO_WAIT_FOR_URL_MS ?? 30000);
 const pollIntervalMs = Number(env.AIRO_URL_POLL_INTERVAL_MS ?? 1000);
+const serviceUser = env.AIRO_SERVICE_USER || env.USER || 'pi';
+const serviceWorkdir = env.AIRO_SERVICE_WORKDIR || projectRoot;
+const serviceExecStart = env.AIRO_SERVICE_EXEC_START || '/usr/bin/npm run dev -- --host 0.0.0.0';
 
 const readUrl = (filePath) => {
   try {
@@ -61,6 +64,52 @@ const waitForUrlChange = async (previousUrl) => {
   return readActiveUrl();
 };
 
+const serviceExists = () => {
+  try {
+    execFileSync('systemctl', ['status', `${serviceName}.service`], {
+      cwd: projectRoot,
+      stdio: 'ignore',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const ensureService = () => {
+  if (serviceExists()) {
+    console.log(`systemd service ${serviceName}.service already exists.`);
+    return;
+  }
+
+  const unit = `[Unit]
+Description=Airo Server
+After=network.target
+
+[Service]
+Type=simple
+User=${serviceUser}
+WorkingDirectory=${serviceWorkdir}
+Environment=NODE_ENV=production
+ExecStart=${serviceExecStart}
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+`;
+
+  console.log(`Creating systemd service ${serviceName}.service...`);
+  execFileSync('sh', ['-lc', `printf '%s' "${unit.replace(/"/g, '\\"')}" | sudo tee /etc/systemd/system/${serviceName}.service >/dev/null`], {
+    cwd: projectRoot,
+    stdio: 'inherit',
+  });
+  run('sudo', ['systemctl', 'daemon-reload']);
+  run('sudo', ['systemctl', 'enable', serviceName]);
+  run('sudo', ['systemctl', 'start', serviceName]);
+  console.log(`Created and started ${serviceName}.service`);
+};
+
 const main = async () => {
   const beforeUrl = readActiveUrl();
   const beforeHead = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: projectRoot, encoding: 'utf8' }).trim();
@@ -87,6 +136,7 @@ const main = async () => {
     console.log(`Restarting with custom command: ${restartCommand}`);
     run('sh', ['-lc', restartCommand]);
   } else {
+    ensureService();
     console.log(`Restarting systemd service: ${serviceName}`);
     run('sudo', ['systemctl', 'restart', serviceName]);
   }
