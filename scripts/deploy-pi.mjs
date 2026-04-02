@@ -1,7 +1,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { execFileSync } from 'child_process';
+import { execFileSync, spawn } from 'child_process';
 
 const projectRoot = process.cwd();
 const envFile = path.resolve(projectRoot, '.env.local');
@@ -9,6 +9,8 @@ const currentPublicUrlPath = path.resolve(projectRoot, '.current-public-url');
 const currentServerUrlPath = path.resolve(projectRoot, '.current-server-url');
 const gistUpdaterScript = path.resolve(projectRoot, 'scripts/update-gist-latest-url.mjs');
 const publicTunnelScript = path.resolve(projectRoot, 'scripts/start-public-tunnel.mjs');
+const statusWindowScript = path.resolve(projectRoot, 'scripts/ops-status-window.py');
+const statusWindowStatePath = path.resolve(projectRoot, '.ops-deploy-status.json');
 
 const readEnvFile = () => {
   if (!fs.existsSync(envFile)) return {};
@@ -42,6 +44,7 @@ const cloudflaredBin =
   env.CLOUDFLARED_BIN ||
   env.AIRO_CLOUDFLARED_BIN ||
   '/usr/bin/cloudflared';
+const showOpsStatusWindow = String(env.AIRO_SHOW_STATUS_WINDOW ?? '1') !== '0';
 
 const readUrl = (filePath) => {
   try {
@@ -68,6 +71,41 @@ const capture = (command, args, options = {}) =>
   }).trim();
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+let statusWindowChild = null;
+
+const writeStatusWindow = (step, detail = '', done = false) => {
+  try {
+    fs.writeFileSync(
+      statusWindowStatePath,
+      JSON.stringify(
+        {
+          title: 'Airo OPS',
+          step,
+          detail,
+          done,
+          closeAfterMs: done ? 2200 : 0,
+        },
+        null,
+        2
+      )
+    );
+  } catch {}
+};
+
+const startStatusWindow = () => {
+  const hasDisplay = Boolean(process.env.DISPLAY || process.env.WAYLAND_DISPLAY);
+  if (!showOpsStatusWindow || !hasDisplay || !fs.existsSync(statusWindowScript)) return;
+  try {
+    writeStatusWindow('Starting...', 'Opening OPS deploy window...');
+    statusWindowChild = spawn('python3', [statusWindowScript, statusWindowStatePath], {
+      cwd: projectRoot,
+      detached: true,
+      stdio: 'ignore',
+    });
+    statusWindowChild.unref();
+  } catch {}
+};
 
 const readActiveUrl = () => readUrl(currentPublicUrlPath) || readUrl(currentServerUrlPath);
 
@@ -156,18 +194,22 @@ WantedBy=multi-user.target
 `;
 
 const main = async () => {
+  startStatusWindow();
   const beforeUrl = readActiveUrl();
   const beforeHead = capture('git', ['rev-parse', 'HEAD']);
 
+  writeStatusWindow('Checking Git...', `Current commit ${beforeHead.slice(0, 7)}`);
   console.log(`Current commit: ${beforeHead}`);
   console.log('Fetching latest git changes...');
   run('git', ['fetch', '--all', '--prune']);
   run('git', ['pull', '--ff-only']);
 
   const afterHead = capture('git', ['rev-parse', 'HEAD']);
+  writeStatusWindow('Git Updated', beforeHead !== afterHead ? `Updated to ${afterHead.slice(0, 7)}` : 'Already up to date.');
   console.log(beforeHead !== afterHead ? `Updated to commit: ${afterHead}` : 'Already up to date.');
 
   if (autoInstall && fs.existsSync(path.resolve(projectRoot, 'package.json'))) {
+    writeStatusWindow('Installing AirOS Update...', 'Installing dependencies on OPS...');
     console.log('Installing dependencies...');
     if (fs.existsSync(path.resolve(projectRoot, 'package-lock.json'))) {
       run('npm', ['ci']);
@@ -177,20 +219,26 @@ const main = async () => {
   }
 
   if (restartCommand) {
+    writeStatusWindow('Restarting OPS...', 'Running custom OPS restart command...');
     console.log(`Restarting with custom command: ${restartCommand}`);
     run('sh', ['-lc', restartCommand]);
   } else {
+    writeStatusWindow('Configuring OPS Services...', 'Ensuring preview and tunnel services exist...');
     ensureService(previewServiceName, buildPreviewUnit());
     ensureService(tunnelServiceName, buildTunnelUnit());
 
+    writeStatusWindow('Restarting AirOS Server...', `Restarting ${previewServiceName}.service...`);
     console.log(`Restarting OPS preview service: ${previewServiceName}`);
     run('sudo', ['systemctl', 'restart', previewServiceName]);
+    writeStatusWindow('Running Cloudflare Tunnel...', `Restarting ${tunnelServiceName}.service...`);
     console.log(`Restarting OPS tunnel service: ${tunnelServiceName}`);
     run('sudo', ['systemctl', 'restart', tunnelServiceName]);
   }
 
+  writeStatusWindow('Waiting For Public URL...', 'Watching for a fresh trycloudflare address...');
   const afterUrl = await waitForValidUrlChange(beforeUrl);
   if (updateGist && afterUrl && afterUrl !== beforeUrl && fs.existsSync(gistUpdaterScript)) {
+    writeStatusWindow('Updating Gist...', afterUrl);
     console.log(`Cloudflare URL changed, updating Gist: ${afterUrl}`);
     run('node', [gistUpdaterScript, afterUrl]);
   } else if (afterUrl && afterUrl === beforeUrl) {
@@ -199,10 +247,12 @@ const main = async () => {
     console.log('No valid Cloudflare URL found after restart.');
   }
 
+  writeStatusWindow('OPS Deploy Complete', afterUrl || 'Deploy finished.', true);
   console.log('OPS deploy cycle complete.');
 };
 
 main().catch((error) => {
+  writeStatusWindow('OPS Deploy Failed', error instanceof Error ? error.message : String(error), true);
   console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
 });

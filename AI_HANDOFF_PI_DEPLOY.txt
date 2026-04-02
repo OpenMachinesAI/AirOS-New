@@ -21,6 +21,11 @@ What deploy:pi now does:
 - Restarts both services
 - Waits for a valid trycloudflare URL to change
 - Updates the GitHub Gist only when the valid public URL changed
+- When OPS has a desktop session, shows a simple status window with steps like:
+  - Installing AirOS Update...
+  - Restarting AirOS Server...
+  - Running Cloudflare Tunnel...
+  - Updating Gist...
 
 Default OPS service assumptions:
 - preview service name: env AIRO_PREVIEW_SYSTEMD_SERVICE, or AIRO_SYSTEMD_SERVICE, or airo
@@ -48,6 +53,7 @@ Important fix versus the old handoff:
 - deploy:pi now manages the OPS preview service and tunnel service explicitly
 - the old "service exists" check was replaced with a real unit-file existence check
 - deploy:pi no longer treats any random https URL as a valid Cloudflare result
+- deploy:pi can now show a simple OPS progress window when DISPLAY or WAYLAND_DISPLAY is available
 
 OPS setup note:
 - On a fresh OPS box, deploy:pi will create /etc/systemd/system/<preview>.service if missing
@@ -71,6 +77,7 @@ Known OPS caveats:
 - npm ci will fail if package-lock.json and package.json drift
 - If cloudflared is not installed at /usr/bin/cloudflared, set CLOUDFLARED_BIN explicitly
 - If OPS should use a different start command, set AIRO_PREVIEW_EXEC_START and/or AIRO_TUNNEL_EXEC_START
+- If OPS is running headless with no desktop session, the status window will not appear, but deploy still works
 
 If another agent edits this area:
 - Keep deploy-pi aligned with scripts/start-public-tunnel.mjs
