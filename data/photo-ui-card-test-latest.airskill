@@ -1,0 +1,66 @@
+{
+  "format": "airskill",
+  "version": "2.0.0",
+  "exportedAt": "2026-03-24T23:59:00.000Z",
+  "skill": {
+    "id": "skill-photo-ui-card-test",
+    "name": "Photo UI Card Test",
+    "description": "Faces the user, takes a photo, previews it, asks to save, and only saves on yes.",
+    "trigger": "menu",
+    "workspaceState": null
+  },
+  "script": {
+    "language": "airscript-1",
+    "entry": [
+      {
+        "action": "say_random",
+        "lines": [
+          "Ooh, photo moment. Let me line this up.",
+          "Okay, let us make this a good one.",
+          "Camera time. I am getting ready."
+        ]
+      },
+      { "action": "set_status", "text": "Finding you" },
+      { "action": "face_person" },
+      { "action": "set_eyes", "preset": "thinking", "durationMs": 650 },
+      { "action": "set_lights", "red": 0, "green": 170, "blue": 255, "durationMs": 800 },
+      { "action": "wait", "durationMs": 120 },
+      { "action": "take_photo", "saveAs": "lastPhoto" },
+      { "action": "set_status", "text": "Showing photo" },
+      {
+        "action": "show_ui_card",
+        "title": "Photo Preview",
+        "subtitle": "Here is the shot I took",
+        "body": "Take a look, then tell me if you want to keep it.",
+        "theme": "photo",
+        "imageUrl": { "var": "lastPhoto" },
+        "chipsJson": "[\"photo\",\"preview\"]",
+        "durationMs": 0
+      },
+      {
+        "action": "say_random",
+        "lines": [
+          "Here is the photo.",
+          "Okay, here is the shot.",
+          "Nice, here is what I got."
+        ]
+      },
+      {
+        "action": "show_confirmation_widget",
+        "title": "Keep this photo?",
+        "subtitle": "Say yes to keep it or no to discard it.",
+        "confirmText": "Yes",
+        "cancelText": "No",
+        "saveAs": "keepPhoto",
+        "durationMs": 12000
+      },
+      {
+        "action": "save_image_to_gallery",
+        "image": { "var": "lastPhoto" },
+        "source": "front",
+        "saveAs": "savedPhotoId",
+        "onlyIfTrueVar": "keepPhoto"
+      }
+    ]
+  }
+}

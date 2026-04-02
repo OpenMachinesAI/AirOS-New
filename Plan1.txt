@@ -1,0 +1,74 @@
+AIRO SPHERO MIGRATION PLAN
+
+Target timing:
+- Resume at the end of the month when the new Android phone and Sphero arrive.
+
+Hardware assumptions:
+- Android phone will be mounted on the robot.
+- Android phone has:
+  - gyroscope
+  - compass
+  - Web Bluetooth support through Chrome / Chromium
+- Sphero robot will become the movement base.
+
+High-level architecture:
+- Keep the Airo web app as the main robot UI and voice system.
+- Keep the laptop / server as the host for:
+  - the web app
+  - backend APIs
+  - skills
+  - remote control backend page
+- The robot-mounted Android device will:
+  - open the Airo web app
+  - connect directly to the Sphero over Web Bluetooth
+  - provide sensor heading / orientation data
+- The laptop does not need to stay near the robot at all times.
+
+What can stay mostly the same:
+- wake word and voice interaction flow
+- screen UI and menu system
+- skill system and skill store
+- backend control page
+- family recognition, gallery, and visual features
+- camera / vision tracking logic at a high level
+
+What must be replaced:
+- current dock / Ollie motor driver
+- current single-motor turn assumptions
+- movement tuning for expressive body behavior
+- any heading logic tied to the current dock behavior
+
+New movement layer goals:
+- replace the existing dock movement driver with a browser-based Sphero driver
+- map Airo movement actions into Sphero actions:
+  - front
+  - behind
+  - left
+  - right
+  - rotate / spin
+  - face user
+  - expressive idle movement
+- use phone heading / compass data for directional consistency
+- retune all movement so Airo feels intentional on a rolling ball base
+
+Likely implementation phases:
+1. Research and confirm the exact Sphero BLE command path that works in browser on Android.
+2. Build a new browser-side Sphero driver module.
+3. Swap the current robot movement backend to use the Sphero driver.
+4. Re-map waypoint turning and expressive gestures to Sphero motion.
+5. Tune vision-follow behavior for a rolling / tilting base.
+6. Tune voice-time expressive movements and idle behaviors.
+7. Test remote backend triggering from the laptop while the robot runs from the Android device.
+
+Important constraints:
+- Browser control is expected to work on Android Chrome / Chromium.
+- Do not rely on iPhone / iPad Safari for the Sphero control path.
+- Prefer a pure browser architecture rather than requiring the laptop to be physically near the robot.
+
+Main reason this plan is viable:
+- Most of Airo can stay as-is.
+- The biggest rewrite is the movement backend, not the whole robot.
+
+Next time this plan is resumed:
+- Start by identifying the exact Sphero model APIs available from browser BLE.
+- Then design the replacement for the current movement driver.

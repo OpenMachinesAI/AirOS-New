@@ -7,9 +7,11 @@ export enum AppState {
 
 export enum EyeState {
   IDLE = 'IDLE',
+  CONNECTING = 'CONNECTING',
   LISTENING = 'LISTENING', // User is speaking (Rainbow)
   SPEAKING = 'SPEAKING', // AI is speaking (Blue)
   THINKING = 'THINKING', // Processing (maybe Pulse)
+  MUTED = 'MUTED',
 }
 
 export interface AudioConfig {
@@ -21,6 +23,6 @@ export type VisualType = 'image' | 'widget' | 'predefined' | 'none';
 export interface VisualContent {
   type: VisualType;
   content: any; // URL for image, HTML source for widget, or data object for predefined
-  component?: 'timer' | 'settings' | 'confirmation';
+  component?: 'timer' | 'settings' | 'confirmation' | 'number' | 'ui-card' | 'eyes-animation' | 'sports' | 'music';
   title?: string;
 }

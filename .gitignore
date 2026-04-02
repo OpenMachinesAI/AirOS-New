@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+certs/
+.current-public-url
 
 # Editor directories and files
 .vscode/*

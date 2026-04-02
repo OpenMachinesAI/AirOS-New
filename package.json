@@ -1,17 +1,24 @@
 {
   "name": "airo-voice-assistant",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.42",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:https": "node scripts/https-preview.mjs",
+    "tunnel": "node scripts/start-public-tunnel.mjs",
+    "stable:gateway": "node scripts/start-stable-public-gateway.mjs",
+    "server:set": "node scripts/set-current-server-url.mjs",
+    "server:clear": "node scripts/clear-current-server-url.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.38.0",
+    "blockly": "^12.5.1",
     "dotenv": "^17.3.1",
     "framer-motion": "^12.37.0",
+    "localtunnel": "^2.0.2",
     "lucide-react": "^0.577.0",
     "motion": "^12.37.0",
     "react": "^19.2.3",

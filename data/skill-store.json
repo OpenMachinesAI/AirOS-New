@@ -1,0 +1,586 @@
+{
+  "skills": [
+    {
+      "id": "skill-1774228974968",
+      "name": "My First Airo Skill",
+      "description": "A custom AirOS block skill.",
+      "trigger": "voice",
+      "toolName": "run_my_first_airo_skill",
+      "generatedCode": "await runtime.say('Hello from my Airo skill.');\nawait runtime.displayText({ title: 'Skill Screen', body: 'This came from Airo Skills.' });\nawait runtime.turnWaypoint(\"front\");\n",
+      "packageData": {
+        "format": "airskill",
+        "version": "1.1.0",
+        "exportedAt": "2026-03-23T01:23:18.900Z"
+      },
+      "emoji": "✨",
+      "color": "#8b5cf6",
+      "author": "Alex Rose",
+      "source": "store"
+    },
+    {
+      "id": "test-upload",
+      "name": "Test Upload",
+      "description": "Upload check",
+      "trigger": "voice",
+      "toolName": "run_test_upload",
+      "generatedCode": "await runtime.say(\"test\");",
+      "packageData": {
+        "format": "airskill",
+        "version": "1.1.0",
+        "exportedAt": "2026-03-23T03:21:00.000Z",
+        "runtime": {}
+      },
+      "emoji": "🛠️",
+      "color": "#22c55e",
+      "author": "Desktop Builder",
+      "source": "store"
+    },
+    {
+      "id": "skill-1774244746183",
+      "name": "Move Behind",
+      "description": "A custom AirOS block skill.",
+      "trigger": "menu",
+      "toolName": "run_move_behind",
+      "generatedCode": "await runtime.moveRobotTimed({ direction: \"behind\", intensity: 2, durationMs: 650 });\n",
+      "packageData": {
+        "format": "airskill",
+        "version": "1.1.0",
+        "exportedAt": "2026-03-23T05:46:03.595Z",
+        "runtime": {
+          "voice": "xai-realtime",
+          "ttsBlock": "airo_xai_say",
+          "supportsVariables": true
+        }
+      },
+      "emoji": "🛠️",
+      "color": "#22c55e",
+      "author": "Desktop Builder",
+      "source": "store"
+    },
+    {
+      "id": "skill-1774245092522",
+      "name": "Doge Skill",
+      "description": "Dis[plays Doge",
+      "trigger": "voice",
+      "toolName": "run_doge_skill",
+      "generatedCode": "await runtime.say('Here is an Image of a Doge');\nawait runtime.displayImage({ url: 'https://upload.wikimedia.org/wikipedia/en/5/5f/Original_Doge_meme.jpg', caption: 'Image of Dodge' });\n",
+      "packageData": {
+        "format": "airskill",
+        "version": "1.1.0",
+        "exportedAt": "2026-03-23T05:52:48.742Z",
+        "runtime": {
+          "voice": "xai-realtime",
+          "ttsBlock": "airo_xai_say",
+          "supportsVariables": true
+        }
+      },
+      "emoji": "🛠️",
+      "color": "#22c55e",
+      "author": "Desktop Builder",
+      "source": "store"
+    },
+    {
+      "id": "skill-1774245568290",
+      "name": "Random Dog",
+      "description": "Shows a random dog on the display",
+      "trigger": "voice",
+      "toolName": "run_random_dog",
+      "generatedCode": "await runtime.say('Here is a random dog i fetched from the web!');\nawait runtime.displayImage({ url: 'https://dog.ceo/api/breeds/image/random Fetch!', caption: 'Random Dog' });\n",
+      "packageData": {
+        "format": "airskill",
+        "version": "1.1.0",
+        "exportedAt": "2026-03-23T06:02:04.340Z",
+        "runtime": {
+          "voice": "xai-realtime",
+          "ttsBlock": "airo_xai_say",
+          "supportsVariables": true
+        }
+      },
+      "emoji": "🛠️",
+      "color": "#22c55e",
+      "author": "Desktop Builder",
+      "source": "store"
+    },
+    {
+      "id": "skill-photo-countdown",
+      "name": "Photo Countdown",
+      "description": "Airo faces you, says a friendly line, counts down from 3, takes a photo, then asks whether to save it and whether you want another.",
+      "trigger": "voice",
+      "toolName": "run_photo_countdown",
+      "generatedCode": "await runtime.say(JSON.parse('[\"Ooh, photo moment. Let me line this up.\",\"Okay, let us make this a good one.\",\"Camera time. I am getting ready.\"]')[Math.floor(Math.random() * JSON.parse('[\"Ooh, photo moment. Let me line this up.\",\"Okay, let us make this a good one.\",\"Camera time. I am getting ready.\"]').length)] || '');\nawait runtime.facePerson();\nawait runtime.setStatusText('Getting ready for a photo');\nawait runtime.setEyesPreset(\"thinking\", 800);\nawait runtime.wait(400);\nawait runtime.say('Facing you now.');\nawait runtime.wait(300);\nawait runtime.setStatusText('Countdown');\nawait runtime.showTimerWidget({ durationSeconds: 3, title: 'Photo starts in' });\nawait runtime.say('Three.');\nawait runtime.wait(1000);\nawait runtime.say('Two.');\nawait runtime.wait(1000);\nawait runtime.say('One.');\nawait runtime.wait(700);\nawait runtime.setStatusText('Taking photo');\nawait runtime.setEyesPreset(\"speaking\", 700);\nawait runtime.takePhoto();\nawait runtime.say(JSON.parse('[\"Got it. Want to save this one?\",\"Nice. Should I save that photo?\",\"Okay, I took it. Do you want to save it?\"]')[Math.floor(Math.random() * JSON.parse('[\"Got it. Want to save this one?\",\"Nice. Should I save that photo?\",\"Okay, I took it. Do you want to save it?\"]').length)] || '');\nawait runtime.showConfirmationWidget({ title: 'Save this photo?', subtitle: 'Say yes to save it or no to discard it.', confirmText: 'Yes', cancelText: 'No' });\nawait runtime.say(JSON.parse('[\"All set. Want to take another?\",\"Would you like one more photo?\",\"Should we try another shot?\"]')[Math.floor(Math.random() * JSON.parse('[\"All set. Want to take another?\",\"Would you like one more photo?\",\"Should we try another shot?\"]').length)] || '');\nawait runtime.showConfirmationWidget({ title: 'Take another photo?', subtitle: 'Say yes for another photo or no to finish.', confirmText: 'Yes', cancelText: 'No' });\n",
+      "packageData": {
+        "format": "airskill",
+        "version": "2.0.0",
+        "exportedAt": "2026-03-24T21:33:35.340Z",
+        "runtime": {
+          "language": "airscript-1",
+          "voice": "flowery-andrew",
+          "ttsBlock": "airo_xai_say",
+          "supportsVariables": true
+        }
+      },
+      "emoji": "🛠️",
+      "color": "#22c55e",
+      "author": "Desktop Builder",
+      "source": "store",
+      "script": {
+        "language": "airscript-1",
+        "entry": [
+          {
+            "action": "say_random",
+            "lines": [
+              "Ooh, photo moment. Let me line this up.",
+              "Okay, let us make this a good one.",
+              "Camera time. I am getting ready."
+            ]
+          },
+          {
+            "action": "face_person"
+          },
+          {
+            "action": "set_status",
+            "text": "Getting ready for a photo"
+          },
+          {
+            "action": "set_eyes",
+            "preset": "thinking",
+            "durationMs": 800
+          },
+          {
+            "action": "wait",
+            "durationMs": 400
+          },
+          {
+            "action": "say",
+            "text": "Facing you now."
+          },
+          {
+            "action": "wait",
+            "durationMs": 300
+          },
+          {
+            "action": "set_status",
+            "text": "Countdown"
+          },
+          {
+            "action": "show_timer_widget",
+            "durationSeconds": 3,
+            "title": "Photo starts in"
+          },
+          {
+            "action": "say",
+            "text": "Three."
+          },
+          {
+            "action": "wait",
+            "durationMs": 1000
+          },
+          {
+            "action": "say",
+            "text": "Two."
+          },
+          {
+            "action": "wait",
+            "durationMs": 1000
+          },
+          {
+            "action": "say",
+            "text": "One."
+          },
+          {
+            "action": "wait",
+            "durationMs": 700
+          },
+          {
+            "action": "set_status",
+            "text": "Taking photo"
+          },
+          {
+            "action": "set_eyes",
+            "preset": "speaking",
+            "durationMs": 700
+          },
+          {
+            "action": "take_photo"
+          },
+          {
+            "action": "say_random",
+            "lines": [
+              "Got it. Want to save this one?",
+              "Nice. Should I save that photo?",
+              "Okay, I took it. Do you want to save it?"
+            ]
+          },
+          {
+            "action": "show_confirmation_widget",
+            "title": "Save this photo?",
+            "subtitle": "Say yes to save it or no to discard it.",
+            "confirmText": "Yes",
+            "cancelText": "No"
+          },
+          {
+            "action": "say_random",
+            "lines": [
+              "All set. Want to take another?",
+              "Would you like one more photo?",
+              "Should we try another shot?"
+            ]
+          },
+          {
+            "action": "show_confirmation_widget",
+            "title": "Take another photo?",
+            "subtitle": "Say yes for another photo or no to finish.",
+            "confirmText": "Yes",
+            "cancelText": "No"
+          }
+        ]
+      }
+    },
+    {
+      "id": "skill-photo-save-prompt",
+      "name": "Photo Save Prompt",
+      "description": "Faces the user, says a fun line, takes a photo, previews it briefly, and asks whether to save it.",
+      "trigger": "photo",
+      "toolName": "run_photo_save_prompt",
+      "generatedCode": "await runtime.say(JSON.parse('[\"Okay, camera time.\",\"I am ready for a photo.\",\"Let me line up a nice shot.\"]')[Math.floor(Math.random() * JSON.parse('[\"Okay, camera time.\",\"I am ready for a photo.\",\"Let me line up a nice shot.\"]').length)] || '');\nawait runtime.facePerson();\nawait runtime.setStatusText('Getting ready for your photo');\nawait runtime.setEyesPreset(\"thinking\", 800);\nawait runtime.say('Say cheese.');\nawait runtime.setStatusText('Taking photo');\nawait runtime.takePhoto();\nawait runtime.setStatusText('Previewing photo');\nawait runtime.displayText({ title: 'Photo Preview', body: 'Your photo is on screen for 2 seconds.' });\nawait runtime.wait(2000);\nawait runtime.showConfirmationWidget({ title: 'Save this photo?', subtitle: 'Say yes to save it, or no to discard it and take another.', confirmText: 'Yes', cancelText: 'No' });\nawait runtime.say('Do you want to save it, or should I discard it and take another?');\n",
+      "script": {
+        "language": "airscript-1",
+        "entry": [
+          {
+            "action": "say_random",
+            "lines": [
+              "Okay, camera time.",
+              "I am ready for a photo.",
+              "Let me line up a nice shot."
+            ]
+          },
+          {
+            "action": "face_person"
+          },
+          {
+            "action": "set_status",
+            "text": "Getting ready for your photo"
+          },
+          {
+            "action": "set_eyes",
+            "preset": "thinking",
+            "durationMs": 800
+          },
+          {
+            "action": "say",
+            "text": "Say cheese."
+          },
+          {
+            "action": "set_status",
+            "text": "Taking photo"
+          },
+          {
+            "action": "take_photo"
+          },
+          {
+            "action": "set_status",
+            "text": "Previewing photo"
+          },
+          {
+            "action": "display_text",
+            "title": "Photo Preview",
+            "body": "Your photo is on screen for 2 seconds."
+          },
+          {
+            "action": "wait",
+            "durationMs": 2000
+          },
+          {
+            "action": "show_confirmation_widget",
+            "title": "Save this photo?",
+            "subtitle": "Say yes to save it, or no to discard it and take another.",
+            "confirmText": "Yes",
+            "cancelText": "No"
+          },
+          {
+            "action": "say",
+            "text": "Do you want to save it, or should I discard it and take another?"
+          }
+        ]
+      },
+      "packageData": {
+        "format": "airskill",
+        "version": "2.0.0",
+        "exportedAt": "2026-03-24T21:52:04.661Z",
+        "runtime": {
+          "language": "airscript-1",
+          "voice": "flowery-andrew",
+          "ttsBlock": "airo_xai_say",
+          "supportsVariables": true
+        }
+      },
+      "emoji": "🛠️",
+      "color": "#22c55e",
+      "author": "Desktop Builder",
+      "source": "store"
+    },
+    {
+      "id": "skill-photo-showcase",
+      "name": "Photo Showcases",
+      "description": "Faces the user, runs a tight cached countdown, takes a photo, shows the preview, and waits for a spoken save answer.",
+      "trigger": "menu",
+      "toolName": "run_photo_showcases",
+      "generatedCode": "await runtime.say(JSON.parse('[\"Ooh, photo moment. Let me line this up.\",\"Okay, let us make this a good one.\",\"Camera time. I am getting ready.\"]')[Math.floor(Math.random() * JSON.parse('[\"Ooh, photo moment. Let me line this up.\",\"Okay, let us make this a good one.\",\"Camera time. I am getting ready.\"]').length)] || '');\nawait runtime.setStatusText('Finding you');\nawait runtime.facePerson();\nawait runtime.setEyesPreset(\"thinking\", 650);\nawait runtime.setDockLights({ red: 0, green: 170, blue: 255, durationMs: 800 });\nawait runtime.wait(120);\nawait runtime.setStatusText('Countdown');\nawait runtime.say('3');\nawait runtime.wait(430);\nawait runtime.say('2');\nawait runtime.wait(430);\nawait runtime.say('1');\nawait runtime.wait(560);\nawait runtime.setStatusText('Taking photo');\nawait runtime.takePhoto();\nawait runtime.setStatusText('Showing photo');\nawait runtime.say(JSON.parse('[\"Here is the photo.\",\"Okay, here is the shot.\",\"Nice, here is what I got.\"]')[Math.floor(Math.random() * JSON.parse('[\"Here is the photo.\",\"Okay, here is the shot.\",\"Nice, here is what I got.\"]').length)] || '');\nawait runtime.wait(3200);\nawait runtime.showConfirmationWidget({ title: 'Keep this photo?', subtitle: 'Say yes to keep it or no to discard it.', confirmText: 'Yes', cancelText: 'No' });\nawait runtime.say(JSON.parse('[\"Okay, photo test complete.\",\"Nice. That finishes the photo test.\",\"All right, the photo flow test is done.\"]')[Math.floor(Math.random() * JSON.parse('[\"Okay, photo test complete.\",\"Nice. That finishes the photo test.\",\"All right, the photo flow test is done.\"]').length)] || '');\n",
+      "script": {
+        "language": "airscript-1",
+        "entry": [
+          {
+            "action": "say_random",
+            "lines": [
+              "Ooh, photo moment. Let me line this up.",
+              "Okay, let us make this a good one.",
+              "Camera time. I am getting ready."
+            ]
+          },
+          {
+            "action": "set_status",
+            "text": "Finding you"
+          },
+          {
+            "action": "face_person"
+          },
+          {
+            "action": "set_eyes",
+            "preset": "thinking",
+            "durationMs": 650
+          },
+          {
+            "action": "set_lights",
+            "red": 0,
+            "green": 170,
+            "blue": 255,
+            "durationMs": 800
+          },
+          {
+            "action": "wait",
+            "durationMs": 120
+          },
+          {
+            "action": "set_status",
+            "text": "Countdown"
+          },
+          {
+            "action": "say",
+            "text": "3"
+          },
+          {
+            "action": "wait",
+            "durationMs": 430
+          },
+          {
+            "action": "say",
+            "text": "2"
+          },
+          {
+            "action": "wait",
+            "durationMs": 430
+          },
+          {
+            "action": "say",
+            "text": "1"
+          },
+          {
+            "action": "wait",
+            "durationMs": 560
+          },
+          {
+            "action": "set_status",
+            "text": "Taking photo"
+          },
+          {
+            "action": "take_photo"
+          },
+          {
+            "action": "set_status",
+            "text": "Showing photo"
+          },
+          {
+            "action": "say_random",
+            "lines": [
+              "Here is the photo.",
+              "Okay, here is the shot.",
+              "Nice, here is what I got."
+            ]
+          },
+          {
+            "action": "wait",
+            "durationMs": 3200
+          },
+          {
+            "action": "show_confirmation_widget",
+            "title": "Keep this photo?",
+            "subtitle": "Say yes to keep it or no to discard it.",
+            "confirmText": "Yes",
+            "cancelText": "No"
+          },
+          {
+            "action": "say_random",
+            "lines": [
+              "Okay, photo test complete.",
+              "Nice. That finishes the photo test.",
+              "All right, the photo flow test is done."
+            ]
+          }
+        ]
+      },
+      "packageData": {
+        "format": "airskill",
+        "version": "2.0.0",
+        "exportedAt": "2026-03-24T22:07:10.517Z",
+        "runtime": {
+          "language": "airscript-1",
+          "voice": "flowery-andrew",
+          "ttsBlock": "airo_xai_say",
+          "supportsVariables": true
+        }
+      },
+      "emoji": "🛠️",
+      "color": "#22c55e",
+      "author": "Desktop Builder",
+      "source": "store"
+    },
+    {
+      "id": "skill-photo-ui-card-test",
+      "name": "Photo UI Card Test",
+      "description": "Faces the user, runs the cached countdown, takes a photo, shows it in a native Airo card, and waits for a spoken save answer.",
+      "trigger": "menu",
+      "toolName": "run_photo_ui_card_test",
+      "generatedCode": "var lastPhoto, confirmationAnswer, savedPhotoId;\n\n\nawait runtime.say(JSON.parse('[\"Ooh, photo moment. Let me line this up.\",\"Okay, let us make this a good one.\",\"Camera time. I am getting ready.\"]')[Math.floor(Math.random() * JSON.parse('[\"Ooh, photo moment. Let me line this up.\",\"Okay, let us make this a good one.\",\"Camera time. I am getting ready.\"]').length)] || '');\nawait runtime.setStatusText('Finding you');\nawait runtime.facePerson();\nawait runtime.setEyesPreset(\"thinking\", 650);\nawait runtime.setDockLights({ red: 0, green: 170, blue: 255, durationMs: 800 });\nawait runtime.wait(120);\nlet lastPhoto = await runtime.takePhoto();\nawait runtime.setStatusText('Showing photo');\nawait runtime.showUiCard({ title: 'Photo Preview', subtitle: 'Here is the shot I took', body: 'Take a look, then tell me if you want to keep it.', theme: \"photo\", imageUrl: lastPhoto, chips: JSON.parse('[\"photo\",\"preview\"]'), durationMs: 0 });\nawait runtime.say(JSON.parse('[\"Here is the photo.\",\"Okay, here is the shot.\",\"Nice, here is what I got.\"]')[Math.floor(Math.random() * JSON.parse('[\"Here is the photo.\",\"Okay, here is the shot.\",\"Nice, here is what I got.\"]').length)] || '');\nawait runtime.wait(3200);\nlet confirmationAnswer = await runtime.showConfirmationWidget({ title: 'Keep this photo?', subtitle: 'Say yes to keep it or no to discard it.', confirmText: 'Yes', cancelText: 'No', durationMs: 9000 });\nif (confirmationAnswer == 'Yes') {\n  let savedPhotoId = await runtime.saveImageToGallery({ image: lastPhoto, source: \"front\" });\n  await runtime.say(JSON.parse('[\"Saving.\",\"Great Photo!.\",\"All right, the photo is saved.\"]')[Math.floor(Math.random() * JSON.parse('[\"Saving.\",\"Great Photo!.\",\"All right, the photo is saved.\"]').length)] || '');\n} else {\n  await runtime.say(JSON.parse('[\"Okay, I won\\'t save it.\",\"Photo Canceled!.\",\"All right, I won\\'t save the photo.\"]')[Math.floor(Math.random() * JSON.parse('[\"Okay, I won\\'t save it.\",\"Photo Canceled!.\",\"All right, I won\\'t save the photo.\"]').length)] || '');\n}\n",
+      "script": {
+        "language": "airscript-1",
+        "entry": [
+          {
+            "action": "say_random",
+            "lines": [
+              "Ooh, photo moment. Let me line this up.",
+              "Okay, let us make this a good one.",
+              "Camera time. I am getting ready."
+            ]
+          },
+          {
+            "action": "set_status",
+            "text": "Finding you"
+          },
+          {
+            "action": "face_person"
+          },
+          {
+            "action": "set_eyes",
+            "preset": "thinking",
+            "durationMs": 650
+          },
+          {
+            "action": "set_lights",
+            "red": 0,
+            "green": 170,
+            "blue": 255,
+            "durationMs": 800
+          },
+          {
+            "action": "wait",
+            "durationMs": 120
+          },
+          {
+            "action": "take_photo",
+            "saveAs": "lastPhoto"
+          },
+          {
+            "action": "set_status",
+            "text": "Showing photo"
+          },
+          {
+            "action": "show_ui_card",
+            "title": "Photo Preview",
+            "subtitle": "Here is the shot I took",
+            "body": "Take a look, then tell me if you want to keep it.",
+            "theme": "photo",
+            "imageUrl": {
+              "var": "K8_25__7Cvlp___zTH_wv__5BH"
+            },
+            "chipsJson": "[\"photo\",\"preview\"]",
+            "durationMs": 0
+          },
+          {
+            "action": "say_random",
+            "lines": [
+              "Here is the photo.",
+              "Okay, here is the shot.",
+              "Nice, here is what I got."
+            ]
+          },
+          {
+            "action": "wait",
+            "durationMs": 3200
+          },
+          {
+            "action": "show_confirmation_widget",
+            "title": "Keep this photo?",
+            "subtitle": "Say yes to keep it or no to discard it.",
+            "confirmText": "Yes",
+            "cancelText": "No",
+            "saveAs": "confirmationAnswer",
+            "durationMs": 9000
+          }
+        ]
+      },
+      "packageData": {
+        "format": "airskill",
+        "version": "2.0.0",
+        "exportedAt": "2026-03-24T23:26:39.456Z",
+        "runtime": {
+          "language": "airscript-1",
+          "voice": "flowery-andrew",
+          "ttsBlock": "airo_xai_say",
+          "supportsVariables": true
+        }
+      },
+      "emoji": "🛠️",
+      "color": "#22c55e",
+      "author": "Desktop Builder",
+      "source": "store"
+    },
+    {
+      "id": "skill-1774580329600",
+      "name": "demo",
+      "description": "A custom AirOS block skill.",
+      "trigger": "voice",
+      "toolName": "run_demo",
+      "generatedCode": "var soundResult;\n\n\nsoundResult = await runtime.playSound({ sound: \"success\", volume: 0.6 });\nawait runtime.setStatusText('Sound test complete');\n",
+      "script": {
+        "language": "airscript-1",
+        "entry": [
+          {
+            "action": "play_sound",
+            "sound": "success",
+            "volume": 0.6,
+            "saveAs": "soundResult"
+          },
+          {
+            "action": "set_status",
+            "text": "Sound test complete"
+          }
+        ]
+      },
+      "packageData": {
+        "format": "airskill",
+        "version": "2.0.0",
+        "exportedAt": "2026-03-27T04:08:45.507Z",
+        "runtime": {
+          "language": "airscript-1",
+          "voice": "flowery-andrew",
+          "ttsBlock": "airo_xai_say",
+          "supportsVariables": true
+        }
+      },
+      "emoji": "🛠️",
+      "color": "#22c55e",
+      "author": "Desktop Builder",
+      "source": "store"
+    }
+  ]
+}

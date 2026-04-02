@@ -29,6 +29,7 @@ export class Ollie {
 
     leftPosition = 0;
     rightPosition = 0;
+    heading = 0;
 
     leftMsPer360 = 1600;
     rightMsPer360 = 1600;
@@ -103,6 +104,50 @@ export class Ollie {
         if (!this.server || !this.server.connected || !this.controlChar) {
             await this.connect();
         }
+    }
+
+    private isRetryableGattError(error: unknown) {
+        const message = String((error as any)?.message || error || '').toLowerCase();
+        return (
+            message.includes('gatt operation') ||
+            message.includes('networkerror') ||
+            message.includes('not connected') ||
+            message.includes('device disconnected') ||
+            message.includes('connection') ||
+            message.includes('characteristic')
+        );
+    }
+
+    private async recoverGattConnection() {
+        try {
+            if (this.device?.gatt?.connected) {
+                this.device.gatt.disconnect();
+            }
+        } catch {
+            // ignore
+        }
+        this.server = null;
+        this.controlChar = null;
+        await this.ensureConnected();
+    }
+
+    private async writeWithRetry(writeFn: () => Promise<void>) {
+        const maxAttempts = 4;
+        let lastError: unknown = null;
+        for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+            try {
+                await writeFn();
+                return;
+            } catch (error) {
+                lastError = error;
+                if (!this.isRetryableGattError(error) || attempt >= maxAttempts - 1) {
+                    throw error;
+                }
+                await this._sleep(45 * (attempt + 1));
+                await this.recoverGattConnection();
+            }
+        }
+        throw lastError instanceof Error ? lastError : new Error(String(lastError || 'gatt-write-failed'));
     }
 
     async init() {
@@ -241,6 +286,7 @@ export class Ollie {
 
         this.leftPosition = 0;
         this.rightPosition = 0;
+        this.heading = 0;
 
         // Left full turn
         await this.setRawMotors(this.Motors.forward, s, this.Motors.off, 0);
@@ -260,6 +306,14 @@ export class Ollie {
     setTrackedPositions(left: number, right: number) {
         this.leftPosition = this._wrap360(left);
         this.rightPosition = this._wrap360(right);
+    }
+
+    setHeading(heading: number) {
+        this.heading = this._wrap360(heading);
+    }
+
+    getHeading() {
+        return this.heading.toFixed(1);
     }
 
     getLeftDirection() {
@@ -318,14 +372,19 @@ export class Ollie {
         packet.set(payload, header.byteLength);
         packet[packet.length - 1] = chk;
 
-        await this.controlChar!.writeValue(packet);
+        await this.writeWithRetry(async () => {
+            await this.ensureConnected();
+            await this.controlChar!.writeValue(packet);
+        });
     }
 
     async _writeCharacteristic(serviceUID: string, characteristicUID: string, value: Uint8Array) {
-        await this.ensureConnected();
-        const service = await this.server!.getPrimaryService(serviceUID);
-        const characteristic = await service.getCharacteristic(characteristicUID);
-        await characteristic.writeValue(value);
+        await this.writeWithRetry(async () => {
+            await this.ensureConnected();
+            const service = await this.server!.getPrimaryService(serviceUID);
+            const characteristic = await service.getCharacteristic(characteristicUID);
+            await characteristic.writeValue(value);
+        });
     }
 }
 

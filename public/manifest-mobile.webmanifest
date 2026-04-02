@@ -1,0 +1,33 @@
+{
+  "id": "/mobile.html",
+  "name": "Airo Mobile",
+  "short_name": "Airo Mobile",
+  "description": "Mobile control app for pairing and controlling Airo.",
+  "theme_color": "#020617",
+  "background_color": "#020617",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "start_url": "/mobile.html",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/airo-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/airo-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/airo-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

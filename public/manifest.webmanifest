@@ -1,0 +1,32 @@
+{
+  "name": "Airo Voice Assistant",
+  "short_name": "Airo",
+  "description": "Airo voice assistant with Gemini Live, wake word support, and device access.",
+  "theme_color": "#000000",
+  "background_color": "#000000",
+  "display": "standalone",
+  "orientation": "any",
+  "scope": "/",
+  "start_url": "/",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icons/airo-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/airo-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/airo-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

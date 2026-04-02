@@ -1,0 +1,1014 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Airo Sphero Tilt Test</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(12, 24, 48, 0.92);
+      --panel-2: rgba(18, 34, 68, 0.9);
+      --text: #edf4ff;
+      --muted: #9fb0d0;
+      --accent: #7ec9ff;
+      --accent-2: #9dfcc7;
+      --warn: #ffd978;
+      --danger: #ff8d8d;
+      --border: rgba(255, 255, 255, 0.1);
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Avenir Next", "SF Pro Display", Inter, system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(72, 132, 255, 0.28), transparent 36%),
+        radial-gradient(circle at bottom left, rgba(27, 173, 136, 0.18), transparent 30%),
+        linear-gradient(180deg, #091322 0%, #040912 100%);
+    }
+
+    .wrap {
+      width: min(1120px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+
+    .hero {
+      margin-bottom: 20px;
+    }
+
+    .eyebrow {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 10px 0 12px;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      grid-column: span 12;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+      backdrop-filter: blur(12px);
+      border-radius: 24px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    @media (min-width: 900px) {
+      .span-4 { grid-column: span 4; }
+      .span-5 { grid-column: span 5; }
+      .span-7 { grid-column: span 7; }
+      .span-8 { grid-column: span 8; }
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.92);
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .toolbar,
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .toolbar {
+      margin-top: 16px;
+    }
+
+    button,
+    input {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      padding: 12px 14px;
+      color: var(--text);
+      background: linear-gradient(180deg, rgba(71, 122, 238, 0.4), rgba(29, 61, 127, 0.55));
+      transition: transform 120ms ease, filter 120ms ease, opacity 120ms ease;
+    }
+
+    button:hover { filter: brightness(1.08); }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .ghost {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .danger {
+      background: linear-gradient(180deg, rgba(170, 45, 45, 0.6), rgba(98, 23, 23, 0.6));
+    }
+
+    .good {
+      background: linear-gradient(180deg, rgba(26, 152, 109, 0.68), rgba(15, 88, 63, 0.72));
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.28);
+      box-shadow: 0 0 0 0 rgba(255,255,255,0);
+    }
+
+    .dot.connected {
+      background: var(--accent-2);
+      box-shadow: 0 0 14px rgba(157, 252, 199, 0.65);
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 8px 12px;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+
+    .kv .key {
+      color: var(--muted);
+    }
+
+    .controls {
+      display: grid;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .tilt-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .field input[type="number"] {
+      width: 100%;
+      padding: 12px 14px;
+      color: var(--text);
+      background: rgba(0,0,0,0.24);
+    }
+
+    .field input[type="range"] {
+      width: 100%;
+      accent-color: #88d1ff;
+    }
+
+    .tilt-pad {
+      position: relative;
+      aspect-ratio: 1;
+      width: min(100%, 300px);
+      margin: 0 auto;
+      border-radius: 28px;
+      border: 1px solid var(--border);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)),
+        radial-gradient(circle at center, rgba(126, 201, 255, 0.12), transparent 55%);
+      overflow: hidden;
+    }
+
+    .tilt-pad::before,
+    .tilt-pad::after {
+      content: "";
+      position: absolute;
+      inset: 50%;
+      background: rgba(255,255,255,0.12);
+      transform: translate(-50%, -50%);
+    }
+
+    .tilt-pad::before {
+      width: calc(100% - 28px);
+      height: 1px;
+    }
+
+    .tilt-pad::after {
+      width: 1px;
+      height: calc(100% - 28px);
+    }
+
+    .tilt-node {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #d5f2ff, #60b8ff 70%, #2575d7);
+      box-shadow: 0 0 20px rgba(96, 184, 255, 0.6);
+      transform: translate(-50%, -50%);
+      transition: left 120ms ease, top 120ms ease;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .metric {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .metric .value {
+      margin-top: 6px;
+      font-size: 1.6rem;
+      letter-spacing: -0.03em;
+    }
+
+    .log {
+      margin-top: 16px;
+      min-height: 220px;
+      max-height: 420px;
+      overflow: auto;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: rgba(2, 6, 15, 0.84);
+      padding: 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      color: #d7e7ff;
+      white-space: pre-wrap;
+    }
+
+    .hint {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .checkbox input {
+      width: 16px;
+      height: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="eyebrow">Airo Lab</div>
+      <h1>Sphero Tilt Test</h1>
+      <p>
+        Connect directly to a SPRK+ / Sphero over Web Bluetooth and drive it by entering a tilt vector.
+        Positive <strong>X</strong> biases the right side. Positive <strong>Y</strong> drives forward. The page converts that tilt into raw left and right motor commands instead of using Sphero roll mode.
+      </p>
+    </div>
+
+    <div class="grid">
+      <section class="card span-4">
+        <div class="row" style="justify-content:space-between">
+          <h2>Connection</h2>
+          <div class="status-pill">
+            <span id="statusDot" class="dot"></span>
+            <span id="statusText">Disconnected</span>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <button id="connectBtn">Connect</button>
+          <button id="disconnectBtn" class="ghost" disabled>Disconnect</button>
+          <button id="wakeBtn" class="ghost" disabled>Wake / Dev Mode</button>
+          <button id="powerBtn" class="ghost" disabled>Read Battery</button>
+        </div>
+
+        <div class="kv">
+          <div class="key">Device</div>
+          <div id="deviceName">-</div>
+          <div class="key">Power</div>
+          <div id="powerInfo">Unknown</div>
+          <div class="key">Last response</div>
+          <div id="lastResponse">-</div>
+        </div>
+
+        <div class="hint">
+          Use Chrome or Edge on HTTPS or localhost. If discovery is flaky, power cycle the Sphero and retry.
+        </div>
+      </section>
+
+      <section class="card span-8">
+        <div class="row" style="justify-content:space-between">
+          <h2>Tilt Control</h2>
+          <div class="row">
+            <label class="checkbox"><input id="autoSend" type="checkbox" /> Auto-send</label>
+            <label class="checkbox"><input id="stabilizeToggle" type="checkbox" checked /> Disable stabilization</label>
+            <label class="checkbox"><input id="pulseMode" type="checkbox" /> Pulse mode</label>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="tilt-grid">
+            <div class="field">
+              <label for="tiltX">Tilt X</label>
+              <input id="tiltX" type="number" min="-100" max="100" step="1" value="0" />
+            </div>
+            <div class="field">
+              <label for="tiltY">Tilt Y</label>
+              <input id="tiltY" type="number" min="-100" max="100" step="1" value="0" />
+            </div>
+          </div>
+
+          <div class="tilt-grid">
+            <div class="field">
+              <label for="maxSpeed">Max Speed</label>
+              <input id="maxSpeed" type="range" min="20" max="255" value="140" />
+              <div class="hint">Current max: <span id="maxSpeedValue">140</span></div>
+            </div>
+            <div class="field">
+              <label for="deadband">Deadband</label>
+              <input id="deadband" type="range" min="0" max="40" value="6" />
+              <div class="hint">Current deadband: <span id="deadbandValue">6</span></div>
+            </div>
+          </div>
+
+          <div class="tilt-grid">
+            <div class="field">
+              <label for="pulseOnMs">Pulse On Time</label>
+              <input id="pulseOnMs" type="range" min="40" max="600" value="170" />
+              <div class="hint">Motor-on burst: <span id="pulseOnMsValue">170</span> ms</div>
+            </div>
+            <div class="field">
+              <label for="pulseOffMs">Pulse Off Time</label>
+              <input id="pulseOffMs" type="range" min="20" max="500" value="110" />
+              <div class="hint">Release time: <span id="pulseOffMsValue">110</span> ms</div>
+            </div>
+          </div>
+
+          <div class="tilt-grid">
+            <div class="field">
+              <label>Sensor Feedback</label>
+              <div class="row">
+                <button id="sensorBtn" class="ghost">Enable Sensors</button>
+                <button id="zeroSensorBtn" class="ghost">Zero Sensors</button>
+              </div>
+              <div class="hint" id="sensorStatus">Sensors inactive</div>
+              <label class="checkbox" style="margin-top:10px;"><input id="feedbackToggle" type="checkbox" checked /> Stop at target using phone tilt</label>
+            </div>
+            <div class="field">
+              <label for="goalThreshold">Goal Threshold</label>
+              <input id="goalThreshold" type="range" min="2" max="20" value="6" />
+              <div class="hint">Stop when tilt error is under <span id="goalThresholdValue">6</span></div>
+            </div>
+          </div>
+
+          <div class="grid" style="grid-template-columns: 1.05fr 0.95fr; gap: 16px;">
+            <div class="field">
+              <label>Tilt Map</label>
+              <div class="tilt-pad">
+                <div id="tiltNode" class="tilt-node" style="left:50%;top:50%"></div>
+              </div>
+              <div class="hint">
+                This is just the typed tilt vector visualized as a control pad. It is not reading your device orientation.
+              </div>
+            </div>
+            <div>
+              <div class="metrics">
+                <div class="metric">
+                  <div class="label">Left Motor</div>
+                  <div class="value" id="headingValue">Off</div>
+                </div>
+                <div class="metric">
+                  <div class="label">Right Motor</div>
+                  <div class="value" id="speedValue">Off</div>
+                </div>
+                <div class="metric">
+                  <div class="label">Magnitude</div>
+                  <div class="value" id="magnitudeValue">0.00</div>
+                </div>
+                <div class="metric">
+                  <div class="label">Mode</div>
+                  <div class="value" id="modeValue">Stop</div>
+                </div>
+                <div class="metric">
+                  <div class="label">Current Tilt</div>
+                  <div class="value" id="currentTiltValue">0, 0</div>
+                </div>
+                <div class="metric">
+                  <div class="label">Error</div>
+                  <div class="value" id="errorValue">0, 0</div>
+                </div>
+              </div>
+
+              <div class="toolbar">
+                <button id="sendTiltBtn" class="good" disabled>Send Tilt</button>
+                <button id="zeroTiltBtn" class="ghost">Zero Tilt</button>
+                <button id="stopBtn" class="danger" disabled>Stop</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card span-12">
+        <div class="row" style="justify-content:space-between">
+          <h2>Log</h2>
+          <button id="clearLogBtn" class="ghost">Clear</button>
+        </div>
+        <div id="log" class="log"></div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const UUIDS = {
+        BLE_SERVICE: "22bb746f-2bb0-7554-2d6f-726568705327",
+        WAKE_CHAR: "22bb746f-2bbf-7554-2d6f-726568705327",
+        TX_POWER_CHAR: "22bb746f-2bb2-7554-2d6f-726568705327",
+        ANTI_DOS_CHAR: "22bb746f-2bbd-7554-2d6f-726568705327",
+        ROBOT_CONTROL_SERVICE: "22bb746f-2ba0-7554-2d6f-726568705327",
+        COMMANDS_CHAR: "22bb746f-2ba1-7554-2d6f-726568705327",
+        RESPONSE_CHAR: "22bb746f-2ba6-7554-2d6f-726568705327",
+      };
+
+      const DID = { CORE: 0x00, SPHERO: 0x02 };
+      const CID = {
+        PING: 0x01,
+        GET_POWER_STATE: 0x20,
+        SET_STABILIZATION: 0x02,
+        SET_RAW_MOTORS: 0x33,
+      };
+
+      let device = null;
+      let server = null;
+      let chars = {};
+      let seq = 0;
+      let autoSendTimer = null;
+      let pulseInterval = null;
+      let pulseStopTimer = null;
+      let lastSentSignature = "";
+      let sensorPermissionState = "inactive";
+      let sensorListening = false;
+      let zeroBeta = null;
+      let zeroGamma = null;
+      let currentTiltX = 0;
+      let currentTiltY = 0;
+
+      const $ = (id) => document.getElementById(id);
+
+      const log = (message, cls = "") => {
+        const line = document.createElement("div");
+        if (cls) line.className = cls;
+        line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+        $("log").prepend(line);
+      };
+
+      const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+      const formatSigned = (value) => `${value > 0 ? "+" : ""}${Math.round(value)}`;
+
+      const setConnectedUI = (connected) => {
+        $("statusText").textContent = connected ? "Connected" : "Disconnected";
+        $("statusDot").className = `dot${connected ? " connected" : ""}`;
+        ["disconnectBtn", "wakeBtn", "powerBtn", "sendTiltBtn", "stopBtn"].forEach((id) => {
+          $(id).disabled = !connected;
+        });
+        $("connectBtn").disabled = connected;
+      };
+
+      const checksum = (data) => {
+        let value = 0;
+        for (const byte of data) value = (value + byte) & 0xff;
+        return value ^ 0xff;
+      };
+
+      const intToBytes = (value, count) => {
+        const out = new Array(count).fill(0);
+        for (let index = count - 1; index >= 0; index -= 1) {
+          out[index] = value & 0xff;
+          value >>= 8;
+        }
+        return out;
+      };
+
+      const hex = (bytes) => [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join(" ");
+
+      const buildPacket = (did, cid, data = []) => {
+        const currentSeq = seq++ & 0xff;
+        const dlen = data.length + 1;
+        const packet = [0xff, 0xff, did, cid, currentSeq, dlen, ...data];
+        packet.push(checksum(packet.slice(2)));
+        return Uint8Array.from(packet);
+      };
+
+      const writeChar = async (characteristic, bytes) => {
+        const arr = bytes instanceof Uint8Array ? bytes : Uint8Array.from(bytes);
+        if (characteristic.writeValueWithoutResponse) {
+          await characteristic.writeValueWithoutResponse(arr);
+        } else {
+          await characteristic.writeValue(arr);
+        }
+      };
+
+      const sendCommand = async (did, cid, data = [], label = "") => {
+        if (!chars.commands) throw new Error("Not connected");
+        const packet = buildPacket(did, cid, data);
+        await writeChar(chars.commands, packet);
+        log(`TX ${label || "command"} -> ${hex(packet)}`);
+      };
+
+      const sendRawMotors = async (leftMotor, rightMotor, label = "") => {
+        await sendCommand(
+          DID.SPHERO,
+          CID.SET_RAW_MOTORS,
+          [leftMotor.mode, leftMotor.power, rightMotor.mode, rightMotor.power],
+          label || `raw motors L(${leftMotor.label}) R(${rightMotor.label})`
+        );
+      };
+
+      const parsePowerState = (data) => {
+        if (!data || data.length < 8) return "Unknown";
+        const stateMap = {
+          0x01: "Charging",
+          0x02: "Battery OK",
+          0x03: "Battery Low",
+          0x04: "Battery Critical",
+        };
+        const state = stateMap[data[1]] || `0x${data[1].toString(16)}`;
+        const voltage = ((data[2] << 8) | data[3]) / 100;
+        return `${state} • ${voltage.toFixed(2)} V`;
+      };
+
+      const onNotification = (event) => {
+        const value = new Uint8Array(event.target.value.buffer);
+        $("lastResponse").textContent = hex(value);
+        log(`RX ${hex(value)}`);
+        if (value.length >= 6 && value[0] === 0xff && value[1] === 0xff) {
+          const mrsp = value[2];
+          const dlen = value[4];
+          const data = value.slice(5, 5 + dlen - 1);
+          if (mrsp === 0x00 && data.length >= 8) {
+            $("powerInfo").textContent = parsePowerState(data);
+          }
+        }
+      };
+
+      const updateSensorStatus = () => {
+        const parts = [sensorPermissionState];
+        if (sensorListening) {
+          parts.push(`tilt ${formatSigned(currentTiltX)}, ${formatSigned(currentTiltY)}`);
+        }
+        $("sensorStatus").textContent = parts.join(" • ");
+      };
+
+      const handleOrientation = (event) => {
+        const beta = typeof event.beta === "number" ? event.beta : null;
+        const gamma = typeof event.gamma === "number" ? event.gamma : null;
+        if (beta == null || gamma == null) return;
+
+        if (zeroBeta == null) zeroBeta = beta;
+        if (zeroGamma == null) zeroGamma = gamma;
+
+        currentTiltX = clamp(((gamma - zeroGamma) / 45) * 100, -100, 100);
+        currentTiltY = clamp((-(beta - zeroBeta) / 45) * 100, -100, 100);
+        sensorListening = true;
+        updateSensorStatus();
+        updateTiltUi();
+      };
+
+      const startSensors = async () => {
+        if (typeof window.DeviceOrientationEvent === "undefined") {
+          sensorPermissionState = "unsupported";
+          updateSensorStatus();
+          return;
+        }
+
+        const requestFn = window.DeviceOrientationEvent.requestPermission;
+        if (typeof requestFn === "function") {
+          try {
+            const result = await requestFn();
+            if (result !== "granted") {
+              sensorPermissionState = "denied";
+              updateSensorStatus();
+              return;
+            }
+          } catch (error) {
+            sensorPermissionState = "denied";
+            updateSensorStatus();
+            log(`Sensor permission failed: ${error.message || error}`, "warn");
+            return;
+          }
+        }
+
+        window.removeEventListener("deviceorientation", handleOrientation, true);
+        window.addEventListener("deviceorientation", handleOrientation, true);
+        sensorPermissionState = "active";
+        sensorListening = false;
+        updateSensorStatus();
+      };
+
+      const zeroSensors = () => {
+        zeroBeta = null;
+        zeroGamma = null;
+        currentTiltX = 0;
+        currentTiltY = 0;
+        updateSensorStatus();
+        updateTiltUi();
+      };
+
+      const buildMotorCommandFromVector = (tiltX, tiltY, deadband, maxSpeed) => {
+        const magnitude = Math.min(Math.sqrt((tiltX * tiltX) + (tiltY * tiltY)), 100);
+        const beyondDeadband = Math.max(0, magnitude - deadband);
+        const normalized = deadband >= 100 ? 0 : beyondDeadband / Math.max(1, 100 - deadband);
+        const drive = normalized > 0 ? (tiltY / 100) * maxSpeed : 0;
+        const turn = normalized > 0 ? (tiltX / 100) * maxSpeed : 0;
+        const rawLeft = Math.max(-255, Math.min(255, Math.round(drive + turn)));
+        const rawRight = Math.max(-255, Math.min(255, Math.round(drive - turn)));
+
+        const toMotorState = (value) => {
+          if (Math.abs(value) < 1) {
+            return { mode: 0x00, power: 0, label: "Off" };
+          }
+          return value >= 0
+            ? { mode: 0x01, power: Math.min(255, Math.abs(value)), label: `F ${Math.min(255, Math.abs(value))}` }
+            : { mode: 0x02, power: Math.min(255, Math.abs(value)), label: `R ${Math.min(255, Math.abs(value))}` };
+        };
+
+        const leftMotor = toMotorState(rawLeft);
+        const rightMotor = toMotorState(rawRight);
+        const active = leftMotor.power > 0 || rightMotor.power > 0;
+        return { magnitude, leftMotor, rightMotor, active };
+      };
+
+      const computeTiltCommand = () => {
+        const targetTiltX = clamp(Number($("tiltX").value) || 0, -100, 100);
+        const targetTiltY = clamp(Number($("tiltY").value) || 0, -100, 100);
+        const deadband = Math.max(0, Math.min(40, Number($("deadband").value) || 0));
+        const maxSpeed = Math.max(20, Math.min(255, Number($("maxSpeed").value) || 0));
+        const pulseMode = $("pulseMode").checked;
+        const pulseOnMs = Math.max(40, Math.min(600, Number($("pulseOnMs").value) || 170));
+        const pulseOffMs = Math.max(20, Math.min(500, Number($("pulseOffMs").value) || 110));
+        const feedbackEnabled = $("feedbackToggle").checked && sensorPermissionState === "active";
+        const goalThreshold = Math.max(2, Math.min(20, Number($("goalThreshold").value) || 6));
+        const errorTiltX = feedbackEnabled ? targetTiltX - currentTiltX : targetTiltX;
+        const errorTiltY = feedbackEnabled ? targetTiltY - currentTiltY : targetTiltY;
+        const { magnitude, leftMotor, rightMotor, active } = buildMotorCommandFromVector(errorTiltX, errorTiltY, deadband, maxSpeed);
+        const goalReached = feedbackEnabled && magnitude <= goalThreshold;
+
+        return {
+          targetTiltX,
+          targetTiltY,
+          currentTiltX,
+          currentTiltY,
+          errorTiltX,
+          errorTiltY,
+          deadband,
+          maxSpeed,
+          pulseMode,
+          pulseOnMs,
+          pulseOffMs,
+          feedbackEnabled,
+          goalThreshold,
+          goalReached,
+          magnitude,
+          leftMotor,
+          rightMotor,
+          mode: goalReached ? "At Goal" : active ? (pulseMode ? "Pulse Drive" : "Raw Drive") : "Stop",
+        };
+      };
+
+      const updateTiltUi = () => {
+        const command = computeTiltCommand();
+        $("maxSpeedValue").textContent = String(command.maxSpeed);
+        $("deadbandValue").textContent = String(command.deadband);
+        $("pulseOnMsValue").textContent = String(command.pulseOnMs);
+        $("pulseOffMsValue").textContent = String(command.pulseOffMs);
+        $("goalThresholdValue").textContent = String(command.goalThreshold);
+        $("headingValue").textContent = command.leftMotor.label;
+        $("speedValue").textContent = command.rightMotor.label;
+        $("magnitudeValue").textContent = command.magnitude.toFixed(2);
+        $("modeValue").textContent = command.mode;
+        $("currentTiltValue").textContent = `${formatSigned(command.currentTiltX)}, ${formatSigned(command.currentTiltY)}`;
+        $("errorValue").textContent = `${formatSigned(command.errorTiltX)}, ${formatSigned(command.errorTiltY)}`;
+
+        const left = 50 + (command.targetTiltX * 0.42);
+        const top = 50 - (command.targetTiltY * 0.42);
+        $("tiltNode").style.left = `${left}%`;
+        $("tiltNode").style.top = `${top}%`;
+
+        scheduleAutoSend();
+      };
+
+      const clearPulseDrive = () => {
+        if (pulseInterval) {
+          window.clearInterval(pulseInterval);
+          pulseInterval = null;
+        }
+        if (pulseStopTimer) {
+          window.clearTimeout(pulseStopTimer);
+          pulseStopTimer = null;
+        }
+      };
+
+      const startPulseDrive = async (command) => {
+        clearPulseDrive();
+
+        const runPulse = async () => {
+          try {
+            const nextCommand = computeTiltCommand();
+            if (nextCommand.goalReached || (nextCommand.leftMotor.power === 0 && nextCommand.rightMotor.power === 0)) {
+              clearPulseDrive();
+              await sendRawMotors(
+                { mode: 0x00, power: 0, label: "Off" },
+                { mode: 0x00, power: 0, label: "Off" },
+                nextCommand.goalReached ? "goal reached stop" : "raw stop"
+              );
+              lastSentSignature = "";
+              updateTiltUi();
+              return;
+            }
+            await sendRawMotors(nextCommand.leftMotor, nextCommand.rightMotor, `pulse motors L(${nextCommand.leftMotor.label}) R(${nextCommand.rightMotor.label})`);
+            if (pulseStopTimer) {
+              window.clearTimeout(pulseStopTimer);
+            }
+            pulseStopTimer = window.setTimeout(() => {
+              sendRawMotors(
+                { mode: 0x00, power: 0, label: "Off" },
+                { mode: 0x00, power: 0, label: "Off" },
+                "pulse release"
+              ).catch((error) => log(`Pulse release failed: ${error.message || error}`, "warn"));
+              pulseStopTimer = null;
+            }, nextCommand.pulseOnMs);
+          } catch (error) {
+            log(`Pulse drive failed: ${error.message || error}`, "bad");
+          }
+        };
+
+        await runPulse();
+        pulseInterval = window.setInterval(runPulse, command.pulseOnMs + command.pulseOffMs);
+      };
+
+      const sendTilt = async () => {
+        const command = computeTiltCommand();
+        const signature = `${command.leftMotor.mode}:${command.leftMotor.power}:${command.rightMotor.mode}:${command.rightMotor.power}:${$("stabilizeToggle").checked ? 1 : 0}:${command.pulseMode ? 1 : 0}:${command.pulseOnMs}:${command.pulseOffMs}`;
+        if (signature === lastSentSignature && $("autoSend").checked) return;
+
+        if ($("stabilizeToggle").checked) {
+          await sendCommand(DID.SPHERO, CID.SET_STABILIZATION, [0x00], "stabilization off");
+        }
+
+        if (command.goalReached || (command.leftMotor.power === 0 && command.rightMotor.power === 0)) {
+          clearPulseDrive();
+          await sendRawMotors(
+            { mode: 0x00, power: 0, label: "Off" },
+            { mode: 0x00, power: 0, label: "Off" },
+            command.goalReached ? "goal reached stop" : "raw stop"
+          );
+          lastSentSignature = signature;
+          return;
+        }
+
+        if (command.pulseMode) {
+          await startPulseDrive(command);
+        } else {
+          clearPulseDrive();
+          await sendRawMotors(command.leftMotor, command.rightMotor, `raw motors L(${command.leftMotor.label}) R(${command.rightMotor.label})`);
+        }
+
+        lastSentSignature = signature;
+      };
+
+      const stopRoll = async () => {
+        clearPulseDrive();
+        await sendRawMotors(
+          { mode: 0x00, power: 0, label: "Off" },
+          { mode: 0x00, power: 0, label: "Off" },
+          "raw stop"
+        );
+        lastSentSignature = "";
+      };
+
+      const scheduleAutoSend = () => {
+        if (!$("autoSend").checked || !chars.commands) return;
+        if (autoSendTimer) window.clearTimeout(autoSendTimer);
+        autoSendTimer = window.setTimeout(() => {
+          sendTilt().catch((error) => log(`Auto-send failed: ${error.message || error}`, "warn"));
+        }, 130);
+      };
+
+      const enterDevMode = async () => {
+        await writeChar(chars.antiDos, new TextEncoder().encode("011i3"));
+        log("Anti-DoS string sent");
+        await writeChar(chars.txPower, Uint8Array.of(0x07));
+        log("TX power set to 7");
+        await writeChar(chars.wake, Uint8Array.of(0x01));
+        log("Wake signal sent");
+      };
+
+      const getCharacteristicWithRetry = async (service, uuid, label, tries = 3) => {
+        let lastError;
+        for (let attempt = 1; attempt <= tries; attempt += 1) {
+          try {
+            log(`Getting ${label} (${attempt}/${tries})`);
+            return await service.getCharacteristic(uuid);
+          } catch (error) {
+            lastError = error;
+            await new Promise((resolve) => setTimeout(resolve, 250));
+          }
+        }
+        throw lastError || new Error(`Failed to get ${label}`);
+      };
+
+      const connect = async () => {
+        if (!navigator.bluetooth) {
+          throw new Error("Web Bluetooth is not available in this browser.");
+        }
+
+        device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: [UUIDS.BLE_SERVICE, UUIDS.ROBOT_CONTROL_SERVICE],
+        });
+
+        device.addEventListener("gattserverdisconnected", () => {
+          log("Device disconnected");
+          $("deviceName").textContent = "-";
+          $("powerInfo").textContent = "Unknown";
+          $("lastResponse").textContent = "-";
+          chars = {};
+          server = null;
+          setConnectedUI(false);
+        });
+
+        $("deviceName").textContent = `${device.name || "Unnamed device"} (${device.id})`;
+        log(`Selected device: ${device.name || "Unnamed"}`);
+
+        server = await device.gatt.connect();
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        const bleService = await server.getPrimaryService(UUIDS.BLE_SERVICE);
+        const controlService = await server.getPrimaryService(UUIDS.ROBOT_CONTROL_SERVICE);
+
+        chars.wake = await getCharacteristicWithRetry(bleService, UUIDS.WAKE_CHAR, "wake");
+        chars.txPower = await getCharacteristicWithRetry(bleService, UUIDS.TX_POWER_CHAR, "txPower");
+        chars.antiDos = await getCharacteristicWithRetry(bleService, UUIDS.ANTI_DOS_CHAR, "antiDos");
+        chars.commands = await getCharacteristicWithRetry(controlService, UUIDS.COMMANDS_CHAR, "commands");
+
+        try {
+          chars.response = await getCharacteristicWithRetry(controlService, UUIDS.RESPONSE_CHAR, "response");
+          await chars.response.startNotifications();
+          chars.response.addEventListener("characteristicvaluechanged", onNotification);
+        } catch (error) {
+          log("Response notifications unavailable; continuing anyway.");
+          chars.response = null;
+        }
+
+        setConnectedUI(true);
+        await enterDevMode();
+        log("Connected and ready");
+      };
+
+      const disconnect = async () => {
+        if (autoSendTimer) {
+          window.clearTimeout(autoSendTimer);
+          autoSendTimer = null;
+        }
+        clearPulseDrive();
+        if (device?.gatt?.connected) {
+          device.gatt.disconnect();
+        }
+      };
+
+      $("connectBtn").addEventListener("click", () => {
+        connect().catch((error) => {
+          log(`Connect failed: ${error.message || error}`, "bad");
+          console.error(error);
+        });
+      });
+
+      $("disconnectBtn").addEventListener("click", () => {
+        disconnect().catch((error) => log(`Disconnect failed: ${error.message || error}`, "bad"));
+      });
+
+      $("wakeBtn").addEventListener("click", () => {
+        enterDevMode().catch((error) => log(`Wake failed: ${error.message || error}`, "bad"));
+      });
+
+      $("powerBtn").addEventListener("click", () => {
+        sendCommand(DID.CORE, CID.GET_POWER_STATE, [], "getPowerState").catch((error) => {
+          log(`Power read failed: ${error.message || error}`, "bad");
+        });
+      });
+
+      $("sendTiltBtn").addEventListener("click", () => {
+        sendTilt().catch((error) => log(`Tilt send failed: ${error.message || error}`, "bad"));
+      });
+
+      $("stopBtn").addEventListener("click", () => {
+        stopRoll().catch((error) => log(`Stop failed: ${error.message || error}`, "bad"));
+      });
+
+      $("zeroTiltBtn").addEventListener("click", () => {
+        $("tiltX").value = "0";
+        $("tiltY").value = "0";
+        updateTiltUi();
+      });
+
+      $("clearLogBtn").addEventListener("click", () => {
+        $("log").textContent = "";
+      });
+
+      $("sensorBtn").addEventListener("click", () => {
+        startSensors().catch((error) => log(`Sensor start failed: ${error.message || error}`, "warn"));
+      });
+
+      $("zeroSensorBtn").addEventListener("click", () => {
+        zeroSensors();
+        log("Sensor zero set");
+      });
+
+      ["tiltX", "tiltY", "maxSpeed", "deadband", "autoSend", "stabilizeToggle", "pulseMode", "pulseOnMs", "pulseOffMs", "feedbackToggle", "goalThreshold"].forEach((id) => {
+        $(id).addEventListener("input", updateTiltUi);
+        $(id).addEventListener("change", updateTiltUi);
+      });
+
+      updateSensorStatus();
+      updateTiltUi();
+      setConnectedUI(false);
+      log("Ready. Connect the Sphero, enter a tilt, and send.");
+    })();
+  </script>
+</body>
+</html>
