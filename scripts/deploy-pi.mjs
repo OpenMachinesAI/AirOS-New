@@ -74,7 +74,7 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 let statusWindowChild = null;
 
-const writeStatusWindow = (step, detail = '', done = false) => {
+const writeStatusWindow = (step, detail = '', done = false, closeAfterMs = 0) => {
   try {
     fs.writeFileSync(
       statusWindowStatePath,
@@ -84,7 +84,7 @@ const writeStatusWindow = (step, detail = '', done = false) => {
           step,
           detail,
           done,
-          closeAfterMs: done ? 2200 : 0,
+          closeAfterMs,
         },
         null,
         2
@@ -193,6 +193,27 @@ RestartSec=3
 WantedBy=multi-user.target
 `;
 
+const getServiceState = (name) => {
+  try {
+    return capture('systemctl', ['is-active', `${name}.service`]);
+  } catch {
+    return 'unknown';
+  }
+};
+
+const localServerHealthy = () => {
+  try {
+    execFileSync(
+      'curl',
+      ['-sk', '--max-time', '8', 'https://127.0.0.1:3000/'],
+      { cwd: projectRoot, stdio: 'ignore' }
+    );
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const main = async () => {
   startStatusWindow();
   const beforeUrl = readActiveUrl();
@@ -247,12 +268,27 @@ const main = async () => {
     console.log('No valid Cloudflare URL found after restart.');
   }
 
-  writeStatusWindow('OPS Deploy Complete', afterUrl || 'Deploy finished.', true);
+  writeStatusWindow('Verifying AirOS...', 'Checking server health and service status...');
+  const previewState = getServiceState(previewServiceName);
+  const tunnelState = getServiceState(tunnelServiceName);
+  const serverHealthy = localServerHealthy();
+  const summaryLines = [
+    `AirOS service: ${previewState}`,
+    `Tunnel service: ${tunnelState}`,
+    `Local server: ${serverHealthy ? 'healthy' : 'unreachable'}`,
+    `Public URL: ${afterUrl || readActiveUrl() || 'not available'}`,
+  ];
+
+  if (previewState === 'active' && tunnelState === 'active' && serverHealthy) {
+    writeStatusWindow('AirOS Running', summaryLines.join('\n'), true, 8000);
+  } else {
+    writeStatusWindow('OPS Deploy Finished With Issues', summaryLines.join('\n'), true, 12000);
+  }
   console.log('OPS deploy cycle complete.');
 };
 
 main().catch((error) => {
-  writeStatusWindow('OPS Deploy Failed', error instanceof Error ? error.message : String(error), true);
+  writeStatusWindow('OPS Deploy Failed', error instanceof Error ? error.message : String(error), true, 15000);
   console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
 });
