@@ -11,7 +11,8 @@
     "tunnel": "node scripts/start-public-tunnel.mjs",
     "stable:gateway": "node scripts/start-stable-public-gateway.mjs",
     "server:set": "node scripts/set-current-server-url.mjs",
-    "server:clear": "node scripts/clear-current-server-url.mjs"
+    "server:clear": "node scripts/clear-current-server-url.mjs",
+    "deploy:pi": "node scripts/deploy-pi.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.38.0",
