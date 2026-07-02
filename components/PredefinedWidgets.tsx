@@ -1,410 +1,225 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { Info, QrCode, RefreshCw, Settings, Check, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Info, QrCode, RefreshCw, Settings, Check, X, Play, Pause, Trash2, Plus, Clock, Calendar, Calculator, Newspaper, ExternalLink, Sun, Cloud, CloudRain, CloudDrizzle, CloudSnow, CloudLightning, CloudFog, CloudSun, Wind, Thermometer, Droplets, Music, Volume2, VolumeX, Tv, Camera, Sparkles, History, Layers, Cpu, ChevronLeft, ChevronRight, Download, Image as LucideImage, Battery, BatteryCharging, BatteryFull, Dices } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { playSound, setSoundVolume } from '../utils/soundEffects';
+import { captureCameraFrame, globalVideoElement, setGlobalVideoElement } from '../hooks/usePersonDetection';
+import { getSharedCamera, releaseSharedCamera } from '../hooks/useSharedCamera';
 
-export const TimerWidget = ({ data }: { data: any }) => {
-  const duration = data.durationSeconds || 300;
-  
-  const htmlContent = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Bubbly Robot Timer</title>
-  <style>
-    :root{
-      --bg:#000000;
-      --text:#ffffff;
-      --sub:rgba(255,255,255,0.78);
-
-      --c1:#4de3ff;
-      --c2:#8b7bff;
-      --c3:#ff69c7;
-      --c4:#7dff9b;
-      --c5:#ffd84d;
-
-      --glass:rgba(255,255,255,0.08);
-      --glass-2:rgba(255,255,255,0.12);
-      --stroke:rgba(255,255,255,0.10);
-      --shadow:rgba(0,0,0,0.45);
-    }
-
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-
-    html, body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: transparent;
-      font-family: "Arial", "Helvetica Neue", sans-serif;
-      color: var(--text);
-    }
-
-    body {
-      display: grid;
-      place-items: center;
-    }
-
-    .screen {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      background: transparent;
-    }
-
-    .wrap {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      padding: 3vh;
-    }
-
-    .timer-shell {
-      position: relative;
-      width: min(82vw, 82vh);
-      height: min(82vw, 82vh);
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      background:
-        radial-gradient(circle at 50% 30%, rgba(255,255,255,0.10), rgba(255,255,255,0.02) 42%, rgba(255,255,255,0.01) 55%, rgba(0,0,0,0.45) 78%),
-        rgba(255,255,255,0.02);
-      box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.06),
-        inset 0 18px 45px rgba(255,255,255,0.04),
-        0 0 30px rgba(77,227,255,0.08),
-        0 0 60px rgba(255,105,199,0.05);
-      backdrop-filter: blur(14px);
-      animation: shellPulse 5s ease-in-out infinite;
-    }
-
-    @keyframes shellPulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.01); }
-    }
-
-    .inner {
-      position: absolute;
-      inset: 12%;
-      border-radius: 50%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 8%;
-      background:
-        radial-gradient(circle at 50% 28%, rgba(255,255,255,0.16), rgba(255,255,255,0.03) 38%, rgba(0,0,0,0.45) 76%),
-        rgba(255,255,255,0.03);
-      box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.06),
-        inset 0 16px 34px rgba(255,255,255,0.05);
-      overflow: hidden;
-    }
-
-    .inner::before {
-      content:"";
-      position:absolute;
-      width: 56%;
-      height: 22%;
-      top: 10%;
-      border-radius: 999px;
-      background: radial-gradient(circle at center, rgba(255,255,255,0.14), transparent 70%);
-      filter: blur(12px);
-      pointer-events:none;
-    }
-
-    .label {
-      font-size: clamp(13px, 2vh, 20px);
-      letter-spacing: 0.34em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.72);
-      margin-bottom: 1.2vh;
-      z-index: 2;
-    }
-
-    .time {
-      font-size: clamp(52px, 11vh, 98px);
-      font-weight: 800;
-      line-height: 1;
-      letter-spacing: 0.05em;
-      text-shadow:
-        0 0 12px rgba(255,255,255,0.08),
-        0 0 22px rgba(77,227,255,0.10);
-      font-variant-numeric: tabular-nums;
-      z-index: 2;
-      animation: idleBob 4s ease-in-out infinite;
-    }
-
-    @keyframes idleBob {
-      0%,100% { transform: translateY(0px); }
-      50% { transform: translateY(-2px); }
-    }
-
-    .status {
-      margin-top: 1.6vh;
-      min-height: 1.3em;
-      font-size: clamp(13px, 2vh, 19px);
-      color: var(--sub);
-      z-index: 2;
-    }
-
-    .pulse-orb {
-      margin-top: 1.8vh;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 35% 30%, #fff, var(--c1) 35%, var(--c3) 100%);
-      box-shadow:
-        0 0 10px rgba(77,227,255,0.6),
-        0 0 18px rgba(255,105,199,0.35);
-      animation: orbPulse 1.8s ease-in-out infinite;
-      z-index: 2;
-    }
-
-    @keyframes orbPulse {
-      0%,100% { transform: scale(1); opacity: 0.9; }
-      50% { transform: scale(1.35); opacity: 1; }
-    }
-
-    .tap-bubble {
-      position: absolute;
-      border-radius: 50%;
-      pointer-events: none;
-      background: radial-gradient(circle, rgba(255,255,255,0.35), rgba(255,255,255,0.08), transparent 70%);
-      animation: tapPop 0.55s ease-out forwards;
-      z-index: 20;
-    }
-
-    @keyframes tapPop {
-      0% {
-        transform: translate(-50%, -50%) scale(0.2);
-        opacity: 0.9;
-      }
-      100% {
-        transform: translate(-50%, -50%) scale(2.8);
-        opacity: 0;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="screen" id="screen">
-    <div class="wrap">
-      <div class="timer-shell" id="timerShell">
-        <div class="inner">
-          <div class="label">${data.title || 'Timer'}</div>
-          <div class="time" id="time">00:00</div>
-          <div class="status" id="status">Ready</div>
-          <div class="pulse-orb"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const timeEl = document.getElementById("time");
-    const statusEl = document.getElementById("status");
-    const timerShell = document.getElementById("timerShell");
-    const screen = document.getElementById("screen");
-
-    let totalSeconds = ${data.totalSeconds !== undefined ? data.totalSeconds : duration};
-    let remainingSeconds = ${data.remainingSeconds !== undefined ? data.remainingSeconds : duration};
-    let running = ${data.running !== undefined ? (data.running ? 'true' : 'false') : 'true'};
-    let alarmRinging = ${data.alarmRinging !== undefined ? (data.alarmRinging ? 'true' : 'false') : 'false'};
-    let timer = null;
-
-    function syncWithParent() {
-      window.parent.postMessage({
-        action: 'syncTimer',
-        payload: {
-          totalSeconds,
-          remainingSeconds,
-          running,
-          alarmRinging,
-          title: '${data.title || 'Timer'}'
-        }
-      }, '*');
-    }
-
-    function formatTime(seconds) {
-      const mins = Math.floor(seconds / 60);
-      const secs = seconds % 60;
-      return \`\${String(mins).padStart(2, "0")}:\${String(secs).padStart(2, "0")}\`;
-    }
-
-    function updateUI() {
-      timeEl.textContent = formatTime(remainingSeconds);
-
-      if (remainingSeconds <= 0) {
-        statusEl.textContent = alarmRinging ? "Tap to stop" : "Finished";
-      } else if (running) {
-        statusEl.textContent = "Running";
-      } else if (remainingSeconds === totalSeconds) {
-        statusEl.textContent = "Ready";
-      } else {
-        statusEl.textContent = "Paused";
-      }
-    }
-
-    function startTimer() {
-      if (running || remainingSeconds <= 0) return;
-
-      running = true;
-      alarmRinging = false;
-      updateUI();
-      syncWithParent();
-
-      timer = setInterval(() => {
-        remainingSeconds--;
-
-        if (remainingSeconds <= 0) {
-          remainingSeconds = 0;
-          stopTimer(false);
-          alarmRinging = true;
-          updateUI();
-          finishEffects();
-          syncWithParent();
-          return;
-        }
-
-        updateUI();
-        syncWithParent();
-      }, 1000);
-    }
-
-    function stopTimer(resetButtonText = true) {
-      running = false;
-      clearInterval(timer);
-      timer = null;
-      if (resetButtonText) updateUI();
-      syncWithParent();
-    }
-
-    function resetTimer() {
-      stopTimer(false);
-      remainingSeconds = totalSeconds;
-      alarmRinging = false;
-      updateUI();
-      syncWithParent();
-    }
-
-    function finishEffects() {
-      timerShell.animate(
-        [
-          { transform: "scale(1)", filter: "brightness(1)" },
-          { transform: "scale(1.04)", filter: "brightness(1.25)" },
-          { transform: "scale(1)", filter: "brightness(1)" },
-          { transform: "scale(1.05)", filter: "brightness(1.3)" },
-          { transform: "scale(1)", filter: "brightness(1)" }
-        ],
-        {
-          duration: 1400,
-          easing: "ease-in-out"
-        }
-      );
-
-      beepSequence();
-      makeCelebrationBubbles();
-    }
-
-    function makeCelebrationBubbles() {
-      for (let i = 0; i < 8; i++) {
-        const b = document.createElement("div");
-        b.className = "tap-bubble";
-        b.style.left = \`\${35 + Math.random() * 30}%\`;
-        b.style.top = \`\${35 + Math.random() * 30}%\`;
-        const size = 40 + Math.random() * 80;
-        b.style.width = \`\${size}px\`;
-        b.style.height = \`\${size}px\`;
-        screen.appendChild(b);
-        setTimeout(() => b.remove(), 600);
-      }
-    }
-
-    // Simple Web Audio beep sequence
-    function beepSequence() {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextClass) return;
-
-      const ctx = new AudioContextClass();
-
-      const notes = [
-        { freq: 880, time: 0.00, dur: 0.14 },
-        { freq: 1174, time: 0.18, dur: 0.14 },
-        { freq: 1568, time: 0.36, dur: 0.22 }
-      ];
-
-      notes.forEach(note => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        osc.type = "sine";
-        osc.frequency.value = note.freq;
-
-        gain.gain.setValueAtTime(0.0001, ctx.currentTime + note.time);
-        gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + note.time + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + note.time + note.dur);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start(ctx.currentTime + note.time);
-        osc.stop(ctx.currentTime + note.time + note.dur + 0.03);
-      });
-    }
-
-    // Swipe down to close
-    let touchStartY = 0;
-    document.addEventListener('touchstart', (e) => {
-      touchStartY = e.touches[0].clientY;
-    });
-    document.addEventListener('touchend', (e) => {
-      const touchEndY = e.changedTouches[0].clientY;
-      if (touchEndY - touchStartY > 50) {
-        window.parent.postMessage({ action: 'close' }, '*');
-      }
-    });
-
-    function requestStopIfNeeded() {
-      if (!alarmRinging && remainingSeconds > 0) return;
-      alarmRinging = false;
-      running = false;
-      clearInterval(timer);
-      timer = null;
-      syncWithParent();
-      window.parent.postMessage({ action: 'stopTimer' }, '*');
-    }
-
-    screen.addEventListener('click', requestStopIfNeeded);
-    screen.addEventListener('touchend', requestStopIfNeeded);
-
-    updateUI();
-    if (running) {
-      running = false;
-      startTimer();
-    } else {
-      syncWithParent();
-    }
-  </script>
-</body>
-</html>
-  `;
+export const BatteryWidget = ({ data }: { data: any }) => {
+  const level = data?.level !== undefined ? data.level : 100;
+  const isCharging = data?.isCharging !== undefined ? data.isCharging : true;
+  const statusText = data?.statusText || "Fully Charged";
 
   return (
-    <iframe
-      title="Timer Widget"
-      srcDoc={htmlContent}
-      className="absolute inset-0 w-full h-full border-none bg-transparent"
-    />
+    <div className="w-full max-w-sm mx-auto overflow-hidden text-white" onClick={(e) => e.stopPropagation()}>
+      <div className="p-8 pb-10 flex flex-col items-center justify-center relative z-10">
+        <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", bounce: 0.5 }}
+            className="relative mb-6"
+        >
+            <div className={`w-32 h-32 rounded-full flex items-center justify-center ${isCharging ? 'bg-green-500/20 text-green-400' : level > 20 ? 'bg-blue-500/20 text-blue-400' : 'bg-red-500/20 text-red-400'} shadow-[0_0_50px_rgba(0,0,0,0.3)] inset-0 border border-white/10`} style={{ boxShadow: isCharging ? '0 0 40px rgba(74, 222, 128, 0.4)' : level > 20 ? '0 0 40px rgba(59, 130, 246, 0.4)' : '0 0 40px rgba(239, 68, 68, 0.4)'}}>
+                {isCharging ? (
+                    <BatteryCharging size={64} className="drop-shadow-lg" />
+                ) : (
+                    <BatteryFull size={64} className="drop-shadow-lg" />
+                )}
+            </div>
+            {isCharging && (
+                 <motion.div 
+                     animate={{ opacity: [0, 1, 0], scale: [0.8, 1.2, 0.8] }}
+                     transition={{ duration: 2, repeat: Infinity }}
+                     className="absolute -top-2 -right-2 bg-green-400 w-6 h-6 rounded-full flex items-center justify-center shadow-[0_0_15px_#4ade80]"
+                 >
+                     <CloudLightning size={14} className="text-gray-900" />
+                 </motion.div>
+            )}
+        </motion.div>
+        
+        <motion.h2 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="text-6xl font-bold font-mono tracking-tighter mb-2"
+        >
+            {level}%
+        </motion.h2>
+        
+        <motion.p 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className={`text-lg font-medium px-4 py-1.5 rounded-full ${isCharging ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-gray-300'}`}
+        >
+            {statusText}
+        </motion.p>
+      </div>
+    </div>
+  );
+};
+
+export const DiceWidget = ({ data }: { data: any }) => {
+  const result = data?.result || 1;
+  const [isRolling, setIsRolling] = useState(true);
+  const [displayResult, setDisplayResult] = useState(1);
+  
+  useEffect(() => {
+      let interval: any;
+      if (isRolling) {
+          playSound.bubblyPop();
+          interval = setInterval(() => {
+              setDisplayResult(Math.floor(Math.random() * 6) + 1);
+          }, 100);
+          
+          setTimeout(() => {
+              setIsRolling(false);
+              setDisplayResult(result);
+              playSound.bubblySuccess();
+          }, 1500);
+      }
+      return () => clearInterval(interval);
+  }, [result, isRolling]);
+
+  return (
+    <div className="w-full max-w-sm mx-auto overflow-hidden text-white" onClick={(e) => e.stopPropagation()}>
+      <div className="p-8 pb-10 flex flex-col items-center justify-center relative z-10">
+        <motion.div
+            animate={isRolling ? { rotate: [0, 90, 180, 270, 360], scale: [1, 1.2, 1] } : { rotate: 0, scale: 1 }}
+            transition={isRolling ? { duration: 0.3, repeat: Infinity, ease: "linear" } : { type: "spring", bounce: 0.6 }}
+            className="relative mb-6"
+        >
+            <div className="w-40 h-40 rounded-3xl bg-white flex items-center justify-center shadow-[0_0_60px_rgba(255,255,255,0.4)] relative">
+                 <h2 className="text-8xl font-bold font-mono text-gray-900 tracking-tighter">{displayResult}</h2>
+            </div>
+        </motion.div>
+        
+        <motion.p 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className={`text-2xl font-bold font-mono tracking-tight mt-4 transition-opacity ${isRolling ? 'opacity-0' : 'opacity-100'}`}
+        >
+            Rolled a {result}!
+        </motion.p>
+      </div>
+    </div>
+  );
+};
+
+export const TimerWidget = ({ 
+  data, 
+  onControl 
+}: { 
+  data: any, 
+  onControl?: (action: 'pause' | 'resume' | 'cancel' | 'add_time', id: string) => void 
+}) => {
+  const timers = data?.timers || (data?.remainingSeconds !== undefined ? [data] : []);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="w-full text-white p-6 max-h-[75%] overflow-y-auto custom-scrollbar flex flex-col gap-6">
+      <div className="flex items-center justify-between border-b border-white/5 pb-4">
+        <h2 className="text-2xl font-bold tracking-tight text-white/90">Active Timers</h2>
+        <span className="text-xs font-mono text-white/40 uppercase tracking-widest bg-white/5 px-2.5 py-1 rounded-full">
+          {timers.length} Active
+        </span>
+      </div>
+
+      {timers.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center bg-white/5 rounded-[32px] border border-white/10 p-6">
+          <p className="text-lg text-white/60 mb-1">No active timers</p>
+          <p className="text-xs text-white/40 max-w-[240px]">Ask Gemini "Set a tea timer for 3 minutes" to start one!</p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {timers.map((timer: any) => {
+            const progress = timer.durationSeconds > 0 
+              ? (timer.remainingSeconds / timer.durationSeconds) * 100 
+              : 0;
+
+            const isFinished = timer.remainingSeconds <= 0;
+            const isHighlighted = !!timer.highlighted;
+
+            let cardStyles = "border-white/10 bg-white/5";
+            if (isFinished) {
+              cardStyles = "border-red-500/30 bg-red-950/20 shadow-[0_0_20px_rgba(239,68,68,0.1)]";
+            } else if (isHighlighted) {
+              cardStyles = "border-cyan-400 bg-cyan-950/40 shadow-[0_0_25px_rgba(34,211,238,0.4)] ring-2 ring-cyan-400/20";
+            }
+
+            return (
+              <motion.div 
+                key={timer.id}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ 
+                  opacity: 1, 
+                  scale: isHighlighted ? 1.02 : 1 
+                }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3 }}
+                className={`relative overflow-hidden rounded-[28px] border p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${cardStyles} transition-all duration-300`}
+              >
+                {/* Thin progress background bar */}
+                {!isFinished && (
+                  <div 
+                    className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-cyan-400 to-purple-500 transition-all duration-1000"
+                    style={{ width: `${progress}%` }}
+                  />
+                )}
+
+                <div className="flex flex-col gap-1 min-w-[150px]">
+                  <span className={`text-base font-semibold tracking-wide ${isFinished ? 'text-red-400 animate-pulse' : 'text-white/80'}`}>
+                    {timer.title || 'Timer'}
+                  </span>
+                  <span className="text-xs text-white/40 font-mono">
+                    {isFinished ? 'Finished' : timer.running ? 'Running' : 'Paused'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-6 justify-between sm:justify-end flex-1">
+                  <div className={`text-4xl font-extrabold font-mono tracking-tight ${isFinished ? 'text-red-500 animate-bounce' : 'text-white'}`}>
+                    {formatTime(timer.remainingSeconds)}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {!isFinished && (
+                      <>
+                        <button 
+                          onClick={() => { playSound.bubblyPop(); onControl?.('add_time', timer.id); }}
+                          className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all text-xs font-bold font-mono border border-white/5 cursor-pointer"
+                          title="Add 1 minute"
+                        >
+                          +1m
+                        </button>
+                        <button 
+                          onClick={() => { playSound.bubblyPop(); onControl?.(timer.running ? 'pause' : 'resume', timer.id); }}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer border ${timer.running ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' : 'bg-green-500/20 text-green-400 border-green-500/30'}`}
+                        >
+                          {timer.running ? <Pause size={18} /> : <Play size={18} />}
+                        </button>
+                      </>
+                    )}
+                    <button 
+                      onClick={() => { playSound.bubblyPop(); onControl?.('cancel', timer.id); }}
+                      className="w-10 h-10 rounded-full bg-red-500/10 text-red-100 hover:bg-red-500/20 border border-red-500/30 flex items-center justify-center active:scale-95 transition-all cursor-pointer text-red-400"
+                      title="Delete timer"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -419,17 +234,20 @@ export const SettingsWidget = ({ data }: { data: any }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full bg-black text-white p-4 sm:p-8 min-h-[280px]">
-      <h2 className="text-2xl sm:text-4xl font-bold mb-6 sm:mb-12 tracking-wide text-center">{data.title || 'Settings'}</h2>
-      <div className="flex flex-row gap-5 sm:gap-8 overflow-x-auto pb-4 sm:pb-8 px-2 sm:px-4 max-w-full">
+    <div className="flex flex-col items-center justify-center w-full h-full bg-black text-white p-8 min-h-[350px]">
+      <h2 className="text-4xl font-bold mb-12 tracking-wide">{data.title || 'Settings'}</h2>
+      <div className="flex flex-row gap-8 overflow-x-auto pb-8 px-4 max-w-full">
         {(data.options || []).map((opt: any) => (
-          <div key={opt.id} className="flex flex-col items-center gap-3 shrink-0">
-            <button className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-[radial-gradient(circle_at_30%_25%,rgba(255,255,255,0.2),transparent_42%),linear-gradient(to_bottom,#7c8493,#2d333d)] flex items-center justify-center shadow-[0_20px_40px_rgba(0,0,0,0.45)] hover:scale-105 transition-transform border border-white/10">
-              <div className="text-white drop-shadow-lg scale-90 sm:scale-100">
+          <div key={opt.id} className="flex flex-col items-center gap-4 shrink-0">
+            <button 
+              onClick={() => playSound.bubblyPop()}
+              className="w-32 h-32 rounded-full bg-gradient-to-b from-gray-400 to-gray-700 flex items-center justify-center shadow-2xl hover:scale-105 transition-transform"
+            >
+              <div className="text-white drop-shadow-lg">
                 {getIcon(opt.icon)}
               </div>
             </button>
-            <span className="text-sm sm:text-lg font-medium text-center">{opt.label}</span>
+            <span className="text-lg font-medium">{opt.label}</span>
           </div>
         ))}
       </div>
@@ -437,174 +255,644 @@ export const SettingsWidget = ({ data }: { data: any }) => {
   );
 };
 
-export const ConfirmationWidget = ({
-  data,
-  onAnswer,
-}: {
-  data: any;
-  onAnswer?: (answer: string) => void;
-}) => {
+export const ConfirmationWidget = ({ data }: { data: any }) => {
+  const handleConfirm = () => {
+    playSound.bubblySuccess();
+    window.dispatchEvent(new CustomEvent('airo-confirmation-action', { detail: 'Yes' }));
+  };
+
+  const handleCancel = () => {
+    playSound.bubblyPop();
+    window.dispatchEvent(new CustomEvent('airo-confirmation-action', { detail: 'No' }));
+  };
+
+  useEffect(() => {
+    const handleVoiceTrigger = (e: any) => {
+        const action = (e.detail || '').toLowerCase();
+        if (action === 'yes') handleConfirm();
+        if (action === 'no') handleCancel();
+    };
+    window.addEventListener('airo-voice-trigger', handleVoiceTrigger);
+    return () => window.removeEventListener('airo-voice-trigger', handleVoiceTrigger);
+  }, []);
+
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full bg-black text-white px-4 py-6 sm:p-8 min-h-[280px]">
-      <h2 className="text-2xl sm:text-4xl font-bold text-orange-400 mb-2 text-center">{data.title || 'Confirm?'}</h2>
-      <p className="text-base sm:text-xl text-gray-300 mb-6 sm:mb-12 text-center max-w-2xl">{data.subtitle || ''}</p>
-      <div className="flex flex-row gap-6 sm:gap-12 items-start">
-        <div className="flex flex-col items-center gap-3 sm:gap-4">
-          <button
-            onClick={() => onAnswer?.(data.confirmText || 'Yes')}
-            className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-[radial-gradient(circle_at_30%_25%,rgba(255,255,255,0.26),transparent_38%),linear-gradient(to_bottom,#b6ff67,#2ca745)] flex items-center justify-center shadow-[0_20px_40px_rgba(15,118,36,0.35)] hover:scale-105 transition-transform border border-white/15"
+    <div className="flex flex-col items-center justify-center w-full h-full bg-slate-950 text-white p-8 min-h-[400px]">
+      <h2 className="text-3xl md:text-4xl font-bold text-orange-400 mb-8 text-center">{data.title || 'Confirm?'}</h2>
+      
+      <div className="flex flex-row items-center gap-12 w-full max-w-2xl px-4">
+        <div className="flex flex-col items-center gap-4 shrink-0">
+          <button 
+            onClick={handleCancel}
+            className="w-24 h-24 rounded-full bg-gradient-to-b from-red-400 to-red-600 flex items-center justify-center shadow-[0_20px_50px_rgba(220,38,38,0.5)] hover:scale-110 active:scale-95 transition-all"
           >
-            <Check size={52} className="text-white drop-shadow-lg sm:w-16 sm:h-16" />
+            <X size={48} className="text-white drop-shadow-lg" />
           </button>
-          <span className="text-base sm:text-lg font-medium">{data.confirmText || 'Yes'}</span>
+          <span className="text-lg font-bold tracking-widest uppercase">{data.cancelText || 'No'}</span>
         </div>
-        <div className="flex flex-col items-center gap-3 sm:gap-4">
-          <button
-            onClick={() => onAnswer?.(data.cancelText || 'No')}
-            className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-[radial-gradient(circle_at_30%_25%,rgba(255,255,255,0.22),transparent_38%),linear-gradient(to_bottom,#ff8a72,#d53a31)] flex items-center justify-center shadow-[0_20px_40px_rgba(127,29,29,0.35)] hover:scale-105 transition-transform border border-white/15"
+        
+        <div className="flex-1 flex flex-col items-center justify-center min-w-[200px]">
+           {data.imageUrl ? (
+               <img src={data.imageUrl} className="max-w-full max-h-[250px] rounded-[24px] border-4 border-slate-700 shadow-xl" alt="Preview" />
+           ) : (
+               <p className="text-2xl font-medium text-gray-200 text-center leading-relaxed">{data.subtitle || 'Are you sure?'}</p>
+           )}
+        </div>
+
+        <div className="flex flex-col items-center gap-4 shrink-0">
+          <button 
+            onClick={handleConfirm}
+            className="w-24 h-24 rounded-full bg-gradient-to-b from-green-400 to-green-600 flex items-center justify-center shadow-[0_20px_50px_rgba(22,163,74,0.5)] hover:scale-110 active:scale-95 transition-all animate-pulse"
           >
-            <X size={52} className="text-white drop-shadow-lg sm:w-16 sm:h-16" />
+            <Check size={48} className="text-white drop-shadow-lg" />
           </button>
-          <span className="text-base sm:text-lg font-medium">{data.cancelText || 'No'}</span>
+          <span className="text-lg font-bold tracking-widest uppercase">{data.confirmText || 'Yes'}</span>
         </div>
       </div>
     </div>
   );
 };
 
-export const NumberWidget = ({ data }: { data: any }) => {
-  const value = data?.value ?? '';
-  const label = data?.label || data?.title || 'Number';
-  const subtitle = data?.subtitle || '';
+export const MathWidget = ({ data, isAiSpeaking, highlightedIndex }: { data: any; isAiSpeaking?: boolean; highlightedIndex?: number }) => {
+  const equation = data?.equation || data?.expression || "Math Problem";
+  const result = data?.result || "";
+  const steps = data?.steps || [];
+  const explanation = data?.explanation || "";
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [steps]);
+
+  useEffect(() => {
+    if (typeof highlightedIndex === 'number' && highlightedIndex >= 0 && highlightedIndex < steps.length) {
+      setActiveIndex(highlightedIndex);
+    }
+  }, [highlightedIndex, steps.length]);
+
+  useEffect(() => {
+    if (!isAiSpeaking) {
+      return;
+    }
+    // If the model is not explicitly highlighting via tool, use fallback timer
+    if (typeof highlightedIndex !== 'number') {
+      const intervalTime = 4.5 * 1000;
+      const interval = setInterval(() => {
+        setActiveIndex((prev) => {
+          if (prev < steps.length - 1) {
+            return prev + 1;
+          }
+          return prev;
+        });
+      }, intervalTime);
+      return () => clearInterval(interval);
+    }
+  }, [isAiSpeaking, steps.length, highlightedIndex]);
+
+  useEffect(() => {
+    if (activeIndex >= 0) {
+      playSound.bubblyPop();
+      const element = document.getElementById(`math-step-${activeIndex}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [activeIndex]);
 
   return (
-    <div className="flex h-full w-full items-center justify-center bg-black px-6 py-8 text-white">
-      <div className="flex w-full max-w-2xl flex-col items-center justify-center rounded-[2.25rem] border border-white/10 bg-white/[0.04] px-8 py-12 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
-        <div className="font-mono text-xs uppercase tracking-[0.35em] text-white/45">{label}</div>
-        <div className="mt-6 text-[8rem] font-black leading-none tracking-[-0.06em] text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.18)] sm:text-[10rem]">
-          {String(value)}
+    <div className="w-full text-white p-6 max-h-[75%] overflow-y-auto custom-scrollbar flex flex-col gap-6">
+      <div className="flex items-center justify-between border-b border-white/5 pb-4">
+        <div className="flex items-center gap-2">
+          <Calculator size={20} className="text-purple-400" />
+          <h2 className="text-xl font-bold tracking-tight text-white/90">Mathematical Answer</h2>
         </div>
-        {subtitle ? (
-          <div className="mt-5 max-w-xl text-center text-base text-white/75 sm:text-xl">{subtitle}</div>
-        ) : null}
+        <span className="text-[10px] font-mono text-purple-400 uppercase tracking-widest bg-purple-950/40 border border-purple-500/20 px-2.5 py-1 rounded-full">
+          Solv-it Engine
+        </span>
       </div>
-    </div>
-  );
-};
 
-export const UiCardWidget = ({ data }: { data: any }) => {
-  const [imageFailed, setImageFailed] = useState(false);
-  const theme = String(data?.theme || 'info').toLowerCase();
-  const title = data?.title || 'Airo';
-  const subtitle = data?.subtitle || '';
-  const body = data?.body || '';
-  const imageUrl = String(data?.imageUrl || '').trim();
-  const hasValidImage =
-    !imageFailed &&
-    Boolean(imageUrl) &&
-    (/^data:image\//i.test(imageUrl) ||
-      /^https?:\/\//i.test(imageUrl) ||
-      /^blob:/i.test(imageUrl) ||
-      imageUrl.startsWith('/'));
+      <div className="flex flex-col gap-4">
+        {/* Problem & Answer Card */}
+        <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-6 flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-white/40 uppercase tracking-wider font-mono">Problem / Equation</span>
+            <span className="text-lg font-mono text-white/95 tracking-tight">{equation}</span>
+          </div>
 
-  if (theme === 'photo') {
-    return (
-      <div className="relative h-full w-full overflow-hidden bg-black">
-        {hasValidImage ? (
-          <img
-            src={imageUrl}
-            alt={title}
-            className="h-full w-full object-cover"
-            onError={() => setImageFailed(true)}
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-black text-white/55">
-            <div className="text-center">
-              <div className="font-mono text-xs uppercase tracking-[0.35em]">Photo Preview</div>
-              <div className="mt-3 text-sm">No image available</div>
+          <div className="flex flex-col gap-1 border-t border-white/5 pt-4">
+            <span className="text-xs text-white/40 uppercase tracking-wider font-mono">Result</span>
+            <div className="text-4xl font-black font-mono tracking-tight text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+              {result}
+            </div>
+          </div>
+        </div>
+
+        {/* Steps Display */}
+        {steps.length > 0 && (
+          <div className="flex flex-col gap-3 rounded-[28px] border border-white/5 bg-white/5 p-6">
+            <h3 className="text-xs text-white/40 uppercase tracking-wider font-mono mb-2">Step-by-Step Resolution</h3>
+            <div className="flex flex-col gap-3">
+              {steps.map((step: any, index: number) => {
+                const isActive = index === activeIndex;
+                return (
+                  <div 
+                    key={index} 
+                    id={`math-step-${index}`}
+                    onClick={() => setActiveIndex(index)}
+                    className={`flex gap-4 p-4 rounded-xl border transition-all duration-500 cursor-pointer ${
+                      isActive 
+                        ? 'bg-purple-500/10 border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.2)] scale-[1.01] opacity-100' 
+                        : 'border-transparent opacity-40 hover:opacity-85 scale-95'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-all duration-500 ${
+                      isActive 
+                        ? 'bg-purple-500 text-white border-purple-400' 
+                        : 'bg-purple-500/10 border-purple-500/30 text-purple-400'
+                    }`}>
+                      <span className="text-xs font-mono font-bold">{index + 1}</span>
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center">
+                      <p className={`text-sm leading-relaxed transition-all duration-300 ${isActive ? 'text-white font-semibold' : 'text-white/70'}`}>
+                        {typeof step === 'string' ? step : (step.description || '') + ' ' + (step.subExpression ? '=> ' + step.subExpression : '')}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-6 py-6">
-          <div className="text-2xl font-semibold text-white sm:text-3xl">{title}</div>
-          {subtitle ? <div className="mt-1 text-white/75 sm:text-lg">{subtitle}</div> : null}
-        </div>
-      </div>
-    );
-  }
-  const accentMap: Record<string, string> = {
-    info: 'from-cyan-400 to-sky-500',
-    success: 'from-emerald-400 to-lime-400',
-    warning: 'from-amber-300 to-orange-500',
-    danger: 'from-rose-400 to-red-500',
-    photo: 'from-fuchsia-400 to-cyan-400',
-  };
-  const accent = accentMap[theme] || accentMap.info;
 
-  return (
-    <div className="flex h-full w-full items-center justify-center bg-black px-6 py-8 text-white">
-      <div className="relative w-full max-w-3xl overflow-hidden rounded-[2.25rem] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_35%),rgba(255,255,255,0.04)] px-8 py-10 shadow-[0_30px_100px_rgba(0,0,0,0.5)]">
-        <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent}`} />
-        <div className="font-mono text-[10px] uppercase tracking-[0.35em] text-white/45">{theme}</div>
-        <div className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-5xl">{title}</div>
-        {subtitle ? (
-          <div className="mt-3 text-lg text-white/70 sm:text-2xl">{subtitle}</div>
-        ) : null}
-        {hasValidImage ? (
-          <div className="mt-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-black/40">
-            <img
-              src={imageUrl}
-              alt={title}
-              className="h-64 w-full object-cover sm:h-80"
-              onError={() => setImageFailed(true)}
-            />
+        {/* Explanation */}
+        {explanation && (
+          <div className="rounded-[28px] border border-white/5 bg-white/5 p-6">
+            <h3 className="text-xs text-white/40 uppercase tracking-wider font-mono mb-2">Explanation</h3>
+            <p className="text-sm text-white/75 leading-relaxed">{explanation}</p>
           </div>
-        ) : null}
-        {body ? (
-          <div className="mt-6 text-base leading-relaxed text-white/80 sm:text-xl">{body}</div>
-        ) : null}
-        {Array.isArray(data?.chips) && data.chips.length ? (
-          <div className="mt-6 flex flex-wrap gap-3">
-            {data.chips.map((chip: string, index: number) => (
-              <div
-                key={`${chip}-${index}`}
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 font-mono text-xs uppercase tracking-[0.18em] text-white/70"
-              >
-                {chip}
-              </div>
-            ))}
-          </div>
-        ) : null}
+        )}
       </div>
     </div>
   );
 };
 
-export const SportsScoresWidget = ({ data }: { data: any }) => {
-  const league = String(data?.league || 'sports').toUpperCase();
-  const title = String(data?.title || `${league} Scores`);
-  const items = Array.isArray(data?.items) ? data.items : [];
+export const TimeWidget = ({ data, isAiSpeaking, highlightedIndex }: { data: any; isAiSpeaking?: boolean; highlightedIndex?: number }) => {
+  let locations = data?.locations || data?.locationTimeList || data?.clocks || [];
+  
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  // Dynamic fallback to the user's browser local time
+  const d = new Date();
+  const fallbackTimeString = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  let localTimezoneName = "Local Time";
+  try {
+      localTimezoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch(e) {}
+  
+  if (locations.length === 0 && data?.localTime) {
+      locations = [{ name: "Current Time", currentTime: data.localTime, timezone: localTimezoneName }];
+  }
+
+  let activeLoc = locations[activeIndex] || locations[0];
+  const timeString = activeLoc?.currentTime || activeLoc?.time || data?.localTime || data?.timeString || fallbackTimeString;
+  const timezone = activeLoc?.timezone || data?.timezone || localTimezoneName;
+  const locName = activeLoc?.name || activeLoc?.location || activeLoc?.city || "Current Area";
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [locations]);
+
+  useEffect(() => {
+    if (typeof highlightedIndex === 'number' && highlightedIndex >= 0 && highlightedIndex < locations.length) {
+      setActiveIndex(highlightedIndex);
+    }
+  }, [highlightedIndex, locations.length]);
+
+  useEffect(() => {
+    if (!isAiSpeaking || locations.length <= 1) {
+      return;
+    }
+    // If the model is not explicitly highlighting via tool, use fallback timer
+    if (typeof highlightedIndex !== 'number') {
+      const intervalTime = 3.5 * 1000;
+      const interval = setInterval(() => {
+        setActiveIndex((prev) => {
+          if (prev < locations.length - 1) {
+            return prev + 1;
+          }
+          return prev;
+        });
+      }, intervalTime);
+      return () => clearInterval(interval);
+    }
+  }, [isAiSpeaking, locations.length, highlightedIndex]);
+
+  useEffect(() => {
+    if (activeIndex >= 0) {
+      playSound.bubblyPop();
+      const element = document.getElementById(`time-loc-${activeIndex}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [activeIndex]);
 
   return (
-    <div className="flex h-full w-full items-center justify-center bg-black px-5 py-7 text-white sm:px-8">
-      <div className="flex h-full max-h-[78vh] w-full max-w-4xl flex-col rounded-[2rem] border border-cyan-300/20 bg-gradient-to-b from-cyan-500/10 via-sky-500/5 to-transparent p-5 shadow-[0_30px_80px_rgba(6,182,212,0.12)] sm:p-8">
-        <div className="font-mono text-[10px] uppercase tracking-[0.35em] text-cyan-200/70">{league}</div>
-        <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-4xl">{title}</h2>
-        <div className="mt-5 flex-1 space-y-3 overflow-y-auto pr-1">
-          {items.length ? (
-            items.map((game: any, index: number) => (
-              <div key={`${game?.id || index}`} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <div className="flex items-center justify-between gap-3 text-sm sm:text-lg">
-                  <div className="font-semibold text-white">{String(game?.away || 'Away')}</div>
-                  <div className="font-mono text-cyan-100/85">{String(game?.score || 'vs')}</div>
-                  <div className="font-semibold text-white">{String(game?.home || 'Home')}</div>
+    <div className="w-full text-white p-6 max-h-[75%] overflow-y-auto custom-scrollbar flex flex-col gap-6">
+      <div className="flex items-center justify-between border-b border-white/5 pb-4">
+        <div className="flex items-center gap-2">
+          <Clock size={20} className="text-cyan-400" />
+          <h2 className="text-xl font-bold tracking-tight text-white/90">Current Time</h2>
+        </div>
+        <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest bg-cyan-950/40 border border-cyan-500/20 px-2.5 py-1 rounded-full">
+          {timezone}
+        </span>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {/* Main Time Card */}
+        <div className="relative overflow-hidden rounded-[28px] border border-cyan-500/20 bg-cyan-950/10 p-8 flex flex-col items-center justify-center text-center shadow-[0_0_30px_rgba(34,211,238,0.05)]">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-3xl" />
+          <div className="text-5xl md:text-6xl font-black font-sans tracking-tight text-white mb-2 drop-shadow-[0_0_20px_rgba(34,211,238,0.25)] select-all selection:bg-cyan-500 selection:text-black">
+            {timeString}
+          </div>
+          <p className="text-xs text-cyan-400/70 font-mono tracking-widest uppercase">
+            {locName} {timezone !== "Local Time" && timezone !== locName ? `(${timezone})` : ""}
+          </p>
+        </div>
+
+        {/* World Times List */}
+        {locations.length > 0 && (
+          <div className="flex flex-col gap-3 rounded-[28px] border border-white/5 bg-white/5 p-6">
+            <h3 className="text-xs text-white/40 uppercase tracking-wider font-mono mb-2">World Locations</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {locations.map((loc: any, idx: number) => {
+                const isActive = idx === activeIndex;
+                const displayLocName = loc.name || loc.location || loc.city;
+                const displayLocTime = loc.currentTime || loc.time;
+                return (
+                  <div 
+                    key={idx} 
+                    id={`time-loc-${idx}`}
+                    onClick={() => setActiveIndex(idx)}
+                    className={`flex justify-between items-center border p-4 rounded-2xl transition-all duration-500 cursor-pointer ${
+                      isActive 
+                        ? 'bg-cyan-500/10 border-cyan-500/40 shadow-[0_0_15px_rgba(34,211,238,0.2)] scale-[1.01] opacity-100' 
+                        : 'bg-white/5 border-transparent opacity-40 hover:opacity-85 scale-95'
+                    }`}
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-white/80">{displayLocName}</span>
+                      <span className="text-[10px] text-white/40 font-mono uppercase">{loc.timezone || loc.timeDiff || ""}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isActive && (
+                        <span className="flex h-1.5 w-1.5 relative">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-500"></span>
+                        </span>
+                      )}
+                      <span className={`text-lg font-bold font-mono transition-colors duration-300 ${isActive ? 'text-cyan-400' : 'text-white'}`}>
+                        {displayLocTime}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export const DateWidget = ({ data }: { data: any }) => {
+  const dateString = data?.dateString || "Tuesday, May 19, 2026";
+  const dayOfWeek = data?.dayOfWeek || "Tuesday";
+  const day = parseInt(data?.day || "19");
+  const month = data?.month || "May";
+  const year = data?.year || "2026";
+  const weekNumber = data?.weekNumber || "";
+  const zodiac = data?.zodiac || "";
+
+  const daysInMonthList = Array.from({ length: 31 }, (_, i) => i + 1);
+
+  return (
+    <div className="w-full text-white p-6 max-h-[75%] overflow-y-auto custom-scrollbar flex flex-col gap-6">
+      <div className="flex items-center justify-between border-b border-white/5 pb-4">
+        <div className="flex items-center gap-2">
+          <Calendar size={20} className="text-orange-400" />
+          <h2 className="text-xl font-bold tracking-tight text-white/90">Current Date</h2>
+        </div>
+        <span className="text-[10px] font-mono text-orange-400 uppercase tracking-widest bg-orange-950/40 border border-orange-500/20 px-2.5 py-1 rounded-full">
+          Calendar Card
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        {/* Main Big Date display */}
+        <div className="md:col-span-3 relative overflow-hidden rounded-[28px] border border-orange-500/20 bg-orange-950/10 p-6 flex flex-col justify-between gap-8 shadow-[0_0_30px_rgba(249,115,22,0.05)]">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-orange-400 font-mono tracking-widest uppercase">{dayOfWeek}</span>
+            <div className="text-3xl md:text-4xl font-extrabold tracking-tight text-white mt-1 leading-snug">
+              {dateString}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-4 border-t border-white/5 pt-4 text-xs font-mono text-white/50">
+            {weekNumber && <div>WEEK <span className="text-orange-400 font-bold">{weekNumber}</span></div>}
+            {zodiac && <div className="border-l border-white/10 pl-4">ZODIAC <span className="text-orange-400 font-bold">{zodiac}</span></div>}
+            <div className="border-l border-white/10 pl-4">YEAR <span className="text-white font-bold">{year}</span></div>
+          </div>
+        </div>
+
+        {/* Mini Calendar View card */}
+        <div className="md:col-span-2 rounded-[28px] border border-white/5 bg-white/5 p-5 flex flex-col gap-3">
+          <div className="flex items-center justify-between border-b border-white/5 pb-2">
+            <span className="text-xs font-bold font-mono text-white/70 uppercase">{month} {year}</span>
+            <span className="text-[9px] font-mono text-white/30">MINI VIEW</span>
+          </div>
+
+          <div className="grid grid-cols-7 gap-1.5 text-center text-[10px] font-mono text-white/40 mb-1">
+            <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+          </div>
+
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <span key={`empty-${idx}`} />
+            ))}
+            {daysInMonthList.slice(0, 28).map((d) => {
+              const isCurrentDay = d === day;
+              return (
+                <div 
+                  key={d} 
+                  className={`
+                    h-6 w-6 rounded-full flex items-center justify-center font-mono text-xs transition-all
+                    ${isCurrentDay 
+                      ? 'bg-orange-500 text-black font-extrabold shadow-[0_0_12px_rgba(249,115,22,0.4)] scale-110' 
+                      : 'text-white/75 hover:bg-white/5 cursor-default'
+                    }
+                  `}
+                >
+                  {d}
                 </div>
-                <div className="mt-1 text-xs text-white/55 sm:text-sm">{String(game?.status || '')}</div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const NewsWidget = ({ data, isAiSpeaking, highlightedIndex }: { data: any; isAiSpeaking?: boolean; highlightedIndex?: number }) => {
+  const stories = data?.stories || data?.headlines || [];
+  const queryTopic = data?.queryTopic || "Latest News";
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [stories]);
+
+  useEffect(() => {
+    if (typeof highlightedIndex === 'number' && highlightedIndex >= 0 && highlightedIndex < stories.length) {
+      setActiveIndex(highlightedIndex);
+    }
+  }, [highlightedIndex, stories.length]);
+
+  useEffect(() => {
+    if (!isAiSpeaking) {
+      return;
+    }
+    // If the model is not explicitly highlighting via tool, use fallback timer
+    if (typeof highlightedIndex !== 'number') {
+      const intervalTime = 7.0 * 1000;
+      const interval = setInterval(() => {
+        setActiveIndex((prev) => {
+          if (prev < stories.length - 1) {
+            return prev + 1;
+          }
+          return prev;
+        });
+      }, intervalTime);
+      return () => clearInterval(interval);
+    }
+  }, [isAiSpeaking, stories.length, highlightedIndex]);
+
+  useEffect(() => {
+    if (activeIndex >= 0) {
+      playSound.bubblyPop();
+      const element = document.getElementById(`news-story-${activeIndex}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [activeIndex]);
+
+  return (
+    <div className="w-full text-white p-6 max-h-[75%] overflow-y-auto custom-scrollbar flex flex-col gap-6">
+      <div className="flex items-center justify-between border-b border-white/5 pb-4">
+        <div className="flex items-center gap-2">
+          <Newspaper size={20} className="text-blue-400" />
+          <h2 className="text-xl font-bold tracking-tight text-white/90">News Feed</h2>
+        </div>
+        <span className="text-[10px] font-mono text-blue-400 uppercase tracking-widest bg-blue-950/40 border border-blue-500/20 px-2.5 py-1 rounded-full">
+          {queryTopic}
+        </span>
+      </div>
+
+      {stories.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center bg-white/5 rounded-[32px] border border-white/10 p-6">
+          <p className="text-lg text-white/60 mb-1">No news stories found</p>
+          <p className="text-xs text-white/40">Try asking Gemini "Show me the latest stories about SpaceX"!</p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {stories.map((story: any, idx: number) => {
+            const isActive = idx === activeIndex;
+            return (
+              <div 
+                key={idx}
+                id={`news-story-${idx}`}
+                onClick={() => setActiveIndex(idx)}
+                className={`relative overflow-hidden rounded-[28px] border p-6 flex flex-col gap-3 transition-all duration-500 cursor-pointer pointer-events-auto ${
+                  isActive 
+                    ? 'border-blue-500 bg-blue-950/20 shadow-[0_0_25px_rgba(59,130,246,0.25)] scale-[1.01] opacity-100 z-10' 
+                    : 'border-white/10 bg-white/5 opacity-40 hover:opacity-85 scale-95'
+                }`}
+              >
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex items-center gap-2">
+                    {story.category && (
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-widest bg-blue-500/15 text-blue-400 border border-blue-500/25 px-2.5 py-0.5 rounded-full">
+                        {story.category}
+                      </span>
+                    )}
+                    {isActive && (
+                      <span className="flex h-2 w-2 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                      </span>
+                    )}
+                  </div>
+                  {story.timeAgo && (
+                    <span className="text-[10px] font-mono text-white/30 self-center">
+                      {story.timeAgo}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1.5 w-full">
+                  <h3 className="text-base font-bold tracking-tight text-white/90 leading-snug">
+                    {story.title}
+                  </h3>
+                  {story.summary && (
+                    <p className="text-sm text-white/60 leading-relaxed font-sans">
+                      {story.summary}
+                    </p>
+                  )}
+                </div>
+
+                {(story.source || story.url) && (
+                  <div className="flex justify-between items-center border-t border-white/5 pt-3 mt-1">
+                    <span className="text-xs font-mono font-medium text-white/40">
+                      Source: {story.source || "News Outlet"}
+                    </span>
+                    {story.url && (
+                      <a 
+                        href={story.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors cursor-pointer pointer-events-auto"
+                      >
+                        Read full <ExternalLink size={12} />
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
-            ))
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const WeatherWidget = ({ data }: { data: any }) => {
+  const locationName = data?.locationName || "Current Location";
+  const currentTemp = data?.currentTemp !== undefined ? data.currentTemp : 72;
+  const unit = data?.unit || "F";
+  const condition = data?.condition || "Sunny";
+  const weatherCode = data?.weatherCode !== undefined ? data.weatherCode : 0;
+  const apparentTemp = data?.apparentTemp !== undefined ? data.apparentTemp : currentTemp;
+  const humidity = data?.humidity !== undefined ? data.humidity : 50;
+  const windSpeed = data?.windSpeed || "0 mph";
+  const dailyForecast = data?.dailyForecast || [];
+
+  const getWeatherIcon = (code: number, size = 24, className = "") => {
+    // Mapping weather codes (WMO standard)
+    if (code === 0) return <Sun size={size} className={`text-yellow-400 ${className}`} />;
+    if (code >= 1 && code <= 2) return <CloudSun size={size} className={`text-gray-300 ${className}`} />;
+    if (code === 3) return <Cloud size={size} className={`text-gray-400 ${className}`} />;
+    if (code === 45 || code === 48) return <CloudFog size={size} className={`text-gray-500 ${className}`} />;
+    if (code >= 51 && code <= 57) return <CloudDrizzle size={size} className={`text-blue-400 ${className}`} />;
+    if (code >= 61 && code <= 67) return <CloudRain size={size} className={`text-blue-500 ${className}`} />;
+    if (code >= 71 && code <= 77) return <CloudSnow size={size} className={`text-blue-200 ${className}`} />;
+    if (code >= 80 && code <= 82) return <CloudRain size={size} className={`text-blue-600 ${className}`} />;
+    if (code >= 85 && code <= 86) return <CloudSnow size={size} className={`text-blue-100 ${className}`} />;
+    if (code >= 95 && code <= 99) return <CloudLightning size={size} className={`text-purple-400 ${className}`} />;
+    
+    // Fallback based on condition string if code is missing or unknown
+    const condLower = condition.toLowerCase();
+    if (condLower.includes("sun") || condLower.includes("clear")) return <Sun size={size} className={`text-yellow-400 ${className}`} />;
+    if (condLower.includes("partly") || condLower.includes("mostly")) return <CloudSun size={size} className={`text-gray-300 ${className}`} />;
+    if (condLower.includes("cloud") || condLower.includes("overcast")) return <Cloud size={size} className={`text-gray-400 ${className}`} />;
+    if (condLower.includes("rain") || condLower.includes("shower") || condLower.includes("drizzle")) return <CloudRain size={size} className={`text-blue-500 ${className}`} />;
+    if (condLower.includes("snow") || condLower.includes("ice") || condLower.includes("hail")) return <CloudSnow size={size} className={`text-blue-200 ${className}`} />;
+    if (condLower.includes("thunder") || condLower.includes("storm")) return <CloudLightning size={size} className={`text-purple-400 ${className}`} />;
+    if (condLower.includes("fog") || condLower.includes("mist") || condLower.includes("haze")) return <CloudFog size={size} className={`text-gray-500 ${className}`} />;
+    
+    return <Cloud size={size} className={`text-gray-400 ${className}`} />;
+  };
+
+  const getWeatherTheme = (code: number) => {
+    if (code === 0) return "from-yellow-950/20 to-orange-950/20 border-yellow-500/20 shadow-[0_0_30px_rgba(234,179,8,0.05)]";
+    if (code >= 51 && code <= 67) return "from-blue-950/25 to-sky-950/25 border-blue-500/25 shadow-[0_0_30px_rgba(59,130,246,0.05)]";
+    if (code >= 71 && code <= 77) return "from-slate-900/30 to-blue-950/20 border-sky-400/20 shadow-[0_0_30px_rgba(56,189,248,0.05)]";
+    if (code >= 95 && code <= 99) return "from-purple-950/20 to-slate-950/20 border-purple-500/25 shadow-[0_0_30px_rgba(168,85,247,0.05)]";
+    return "from-gray-950/20 to-slate-950/20 border-white/5 shadow-[0_0_30px_rgba(255,255,255,0.02)]";
+  };
+
+  return (
+    <div className="w-full h-full text-white p-4 md:p-6 overflow-hidden flex flex-col gap-4">
+      <div className="flex items-center justify-between border-b border-white/5 pb-2 md:pb-4 shrink-0">
+        <div className="flex items-center gap-2">
+          {getWeatherIcon(weatherCode, 20)}
+          <h2 className="text-lg md:text-xl font-bold tracking-tight text-white/95">Weather Forecast</h2>
+        </div>
+        <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest bg-cyan-950/40 border border-cyan-500/20 px-2.5 py-1 rounded-full">
+          Meteo Link
+        </span>
+      </div>
+
+      <div className="flex flex-col md:grid md:grid-cols-5 gap-4 flex-1 min-h-0">
+        {/* Current Weather Card */}
+        <div className={`md:col-span-3 relative overflow-hidden rounded-[24px] md:rounded-[28px] border bg-gradient-to-br ${getWeatherTheme(weatherCode)} p-4 md:p-6 flex flex-col justify-between flex-1`}>
+          <div className="absolute top-4 right-4 animate-pulse">
+            {getWeatherIcon(weatherCode, 72, "opacity-90 [filter:drop-shadow(0_0_15px_rgba(255,255,255,0.15))]")}
+          </div>
+
+          <div className="flex flex-col gap-1.5 z-10">
+            <span className="text-xs text-white/40 uppercase tracking-wider font-mono">{locationName}</span>
+            <div className="text-5xl md:text-6xl font-black font-sans tracking-tighter text-white">
+              {currentTemp}°{unit}
+            </div>
+            <span className="text-sm font-semibold text-white/80 mt-1">{condition}</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 border-t border-white/5 pt-4 mt-6 text-xs font-mono text-white/50 z-10">
+            <div className="flex items-center gap-1.5">
+              <Thermometer size={14} className="text-white/40" />
+              <div>FEELS <span className="text-white font-bold">{apparentTemp}°</span></div>
+            </div>
+            <div className="flex items-center gap-1.5 border-l border-white/5 pl-2">
+              <Droplets size={14} className="text-white/40" />
+              <div>HUMID <span className="text-white font-bold">{humidity}%</span></div>
+            </div>
+            <div className="flex items-center gap-1.5 border-l border-white/5 pl-2">
+              <Wind size={14} className="text-white/40" />
+              <div className="truncate">WIND <span className="text-white font-bold">{windSpeed}</span></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Daily Forecast Cards */}
+        <div className="md:col-span-2 rounded-[24px] md:rounded-[28px] border border-white/5 bg-white/5 p-4 md:p-5 flex flex-col gap-2 md:gap-3 flex-1 overflow-hidden min-h-[160px]">
+          <div className="flex items-center justify-between border-b border-white/5 pb-2 shrink-0">
+            <span className="text-xs font-bold font-mono text-white/70 uppercase">Daily Outlook</span>
+            <span className="text-[9px] font-mono text-white/30">Next Days</span>
+          </div>
+
+          {dailyForecast.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center text-center p-4">
+              <span className="text-xs text-white/40">No forecast data provided</span>
+            </div>
           ) : (
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-white/70">
-              No live scores available.
+            <div className="flex flex-col gap-1.5 md:gap-2.5 overflow-y-auto no-scrollbar flex-1">
+              {dailyForecast.map((fc: any, idx: number) => (
+                <div key={idx} className="flex items-center justify-between py-1.5 px-2.5 rounded-xl bg-white/[0.02] border border-transparent hover:border-white/5 hover:bg-white/[0.04] transition-all">
+                  <span className="text-[10px] md:text-xs font-bold text-white/70 w-10 md:w-12">{fc.day}</span>
+                  <div className="flex items-center gap-1.5 md:gap-2">
+                    {getWeatherIcon(fc.weatherCode, 14, "md:w-4 md:h-4")}
+                    <span className="text-[10px] md:text-xs text-white/50 text-left w-16 md:w-20 truncate">{fc.condition || "Clear"}</span>
+                  </div>
+                  <span className="text-[10px] md:text-xs font-mono font-semibold text-white/90">
+                    {fc.maxTemp}° <span className="text-white/40 font-normal">/ {fc.minTemp}°</span>
+                  </span>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -613,435 +901,863 @@ export const SportsScoresWidget = ({ data }: { data: any }) => {
   );
 };
 
-declare global {
-  interface Window {
-    YT?: {
-      Player: new (elementId: string | HTMLElement, options: Record<string, unknown>) => any;
-      PlayerState?: {
-        ENDED: number;
-        PLAYING: number;
-        PAUSED: number;
-      };
-    };
-    onYouTubeIframeAPIReady?: () => void;
-  }
-}
-
-let youtubeIframeApiPromise: Promise<any> | null = null;
-
-const loadYoutubeIframeApi = () => {
-  if (typeof window === 'undefined') {
-    return Promise.reject(new Error('window unavailable'));
-  }
-  if (window.YT?.Player) {
-    return Promise.resolve(window.YT);
-  }
-  if (youtubeIframeApiPromise) {
-    return youtubeIframeApiPromise;
-  }
-  youtubeIframeApiPromise = new Promise((resolve, reject) => {
-    const existing = document.querySelector('script[data-airo-youtube-api="true"]') as HTMLScriptElement | null;
-    const script = existing || document.createElement('script');
-    if (!existing) {
-      script.src = 'https://www.youtube.com/iframe_api';
-      script.async = true;
-      script.dataset.airoYoutubeApi = 'true';
-      document.head.appendChild(script);
-    }
-    const timeoutId = window.setTimeout(() => reject(new Error('YouTube API timed out')), 15000);
-    const previousReady = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
-      window.clearTimeout(timeoutId);
-      previousReady?.();
-      resolve(window.YT);
-    };
-    script.onerror = () => {
-      window.clearTimeout(timeoutId);
-      reject(new Error('YouTube API failed to load'));
-    };
-  });
-  return youtubeIframeApiPromise;
-};
-
-export const PersistentMusicController = ({ data }: { data: any }) => {
-  const mountId = useMemo(() => `airo-music-${Math.random().toString(36).slice(2, 10)}`, []);
-  const playerRef = useRef<any>(null);
-  const [isReady, setIsReady] = useState(false);
-  const videoId = String(data?.queue?.[data?.currentIndex || 0]?.videoId || data?.videoId || '').trim();
-
-  useEffect(() => {
-    if (!videoId) return undefined;
-    let cancelled = false;
-    let localPlayer: any = null;
-
-    void loadYoutubeIframeApi()
-      .then((YT) => {
-        if (cancelled) return;
-        localPlayer = new YT.Player(mountId, {
-          videoId,
-          width: '1',
-          height: '1',
-          playerVars: {
-            autoplay: 1,
-            controls: 0,
-            rel: 0,
-            playsinline: 1,
-            modestbranding: 1,
-            fs: 0,
-            origin: window.location.origin,
-          },
-          events: {
-            onReady: (event: any) => {
-              playerRef.current = event.target;
-              event.target.setVolume(Math.max(0, Math.min(100, Number(data?.volume ?? 65))));
-              if (data?.isPaused) {
-                event.target.pauseVideo?.();
-              } else {
-                event.target.playVideo?.();
-              }
-              setIsReady(true);
-            },
-            onStateChange: (event: any) => {
-              const endedState = window.YT?.PlayerState?.ENDED;
-              if (Number(event?.data) === endedState) {
-                window.dispatchEvent(new CustomEvent('airo-music-ended'));
-              }
-            },
-          },
-        });
-      })
-      .catch((error) => {
-        console.warn('Persistent music controller failed to load', error);
-      });
-
-    return () => {
-      cancelled = true;
-      try {
-        localPlayer?.destroy?.();
-      } catch {}
-      if (playerRef.current === localPlayer) {
-        playerRef.current = null;
-      }
-      setIsReady(false);
-    };
-  }, [mountId, videoId]);
-
-  useEffect(() => {
-    const player = playerRef.current;
-    if (!player || !isReady) return;
-    try {
-      player.setVolume?.(Math.max(0, Math.min(100, Number(data?.volume ?? 65))));
-      if (data?.action === 'pause' || data?.isPaused) {
-        player.pauseVideo?.();
-      } else if (data?.action === 'resume' || data?.action === 'play' || !data?.isPaused) {
-        player.playVideo?.();
-      }
-      if (data?.action === 'stop') {
-        player.stopVideo?.();
-      }
-    } catch (error) {
-      console.warn('Persistent music controller action failed', error);
-    }
-  }, [data?.actionId, data?.action, data?.volume, data?.isPaused, isReady]);
-
-  return <div id={mountId} className="pointer-events-none absolute -left-[9999px] top-0 h-px w-px overflow-hidden opacity-0" />;
-};
-
 export const MusicPlayerWidget = ({ data }: { data: any }) => {
-  const [isPaused, setIsPaused] = useState(Boolean(data?.isPaused));
-  const [currentVolume, setCurrentVolume] = useState(Math.max(0, Math.min(100, Number(data?.volume ?? 65))));
-  const queue = Array.isArray(data?.queue) ? data.queue : [];
-  const track = queue[data?.currentIndex || 0] || data;
-  const title = String(track?.title || 'Music').trim();
-  const artist = String(track?.artist || '').trim();
-  const subtitle = artist ? `${artist}${track?.lengthLabel ? ` • ${String(track.lengthLabel)}` : ''}` : String(track?.lengthLabel || '');
-  const thumbnailUrl = String(track?.thumbnailUrl || '').trim();
+  const { videoId, title, thumbnail, embedUrl } = data || {};
+  const [isPlaying, setIsPlaying] = useState(() => {
+    if (data?.forcePlaybackState === 'pause') return false;
+    return true;
+  });
+  const [volume, setVolume] = useState(() => {
+    if (typeof data?.forceVolume === 'number') return data.forceVolume;
+    return 80;
+  });
+  const [showVideo, setShowVideo] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(240); // Standard simulated song duration (4:00)
+
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
-    setCurrentVolume(Math.max(0, Math.min(100, Number(data?.volume ?? 65))));
-    setIsPaused(Boolean(data?.isPaused));
-  }, [data?.volume, data?.isPaused, data?.currentIndex]);
+    // Autoplay start simulation of play state
+    setIsPlaying(data?.forcePlaybackState === 'pause' ? false : true);
+    setCurrentTime(0);
+  }, [videoId]);
 
-  const adjustVolume = (delta: number) => {
-    const nextVolume = Math.max(0, Math.min(100, currentVolume + delta));
-    setCurrentVolume(nextVolume);
-    window.parent.postMessage({ action: 'musicVolume', payload: { delta } }, '*');
+  // Command messenger for YouTube iframe API control
+  const sendPlayerCommand = (func: string, args: any[] = []) => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      try {
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'command', func, args }),
+          '*'
+        );
+      } catch (err) {
+        console.error("YouTube frame message failed:", err);
+      }
+    }
   };
 
-  const togglePause = () => {
-    window.parent.postMessage({ action: isPaused ? 'resumeMusic' : 'pauseMusic' }, '*');
-    setIsPaused((prev) => !prev);
+  // Watch for external playback control forces
+  useEffect(() => {
+    if (data?.forcePlaybackState === 'pause' && isPlaying) {
+      sendPlayerCommand('pauseVideo');
+      setIsPlaying(false);
+    } else if ((data?.forcePlaybackState === 'play' || data?.forcePlaybackState === 'resume') && !isPlaying) {
+      sendPlayerCommand('playVideo');
+      setIsPlaying(true);
+    }
+  }, [data?.forcePlaybackState]);
+
+  // Watch for external volume control forces
+  useEffect(() => {
+    if (data && typeof data.forceVolume === 'number') {
+      const vol = data.forceVolume;
+      setVolume(vol);
+      sendPlayerCommand('setVolume', [vol]);
+    }
+  }, [data?.forceVolume]);
+
+  // Keep progress moving elegantly when playing
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setCurrentTime((prev) => {
+          if (prev >= duration) {
+            return 0; // seamless replay logic
+          }
+          return prev + 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying, duration]);
+
+  const handlePlayPause = () => {
+    playSound.bubblyPop();
+    if (isPlaying) {
+      sendPlayerCommand('pauseVideo');
+      setIsPlaying(false);
+    } else {
+      sendPlayerCommand('playVideo');
+      setIsPlaying(true);
+    }
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value);
+    setVolume(val);
+    sendPlayerCommand('setVolume', [val]);
+  };
+
+  const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value);
+    setCurrentTime(val);
+    sendPlayerCommand('seekTo', [val, true]);
+  };
+
+  const toggleVideo = () => {
+    playSound.bubblyPop();
+    setShowVideo(!showVideo);
+  };
+
+  const formatSeconds = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins}:${String(secs).padStart(2, '0')}`;
   };
 
   return (
-    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-black text-white">
-      {thumbnailUrl ? (
-        <img
-          src={thumbnailUrl}
-          alt={title}
-          className="absolute inset-0 h-full w-full object-cover opacity-35 blur-2xl scale-110"
-        />
-      ) : null}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_30%),linear-gradient(to_bottom,rgba(0,0,0,0.08),rgba(0,0,0,0.85))]" />
-      <div className="relative z-10 flex h-full w-full max-w-5xl flex-col items-center justify-center px-6 py-20">
-        <div className="w-full overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-[0_35px_120px_rgba(0,0,0,0.6)]">
-          <div className="aspect-video w-full bg-black relative overflow-hidden">
-            {thumbnailUrl ? <img src={thumbnailUrl} alt={title} className="h-full w-full object-cover opacity-80" /> : null}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="flex h-28 w-28 items-center justify-center rounded-full border border-white/15 bg-black/35 text-5xl shadow-[0_24px_60px_rgba(0,0,0,0.45)]">
-                {isPaused ? '▶' : '♪'}
-              </div>
+    <div className="w-full text-white p-6 max-h-[75%] overflow-y-auto custom-scrollbar flex flex-col gap-6">
+      {/* Header bar */}
+      <div className="flex items-center justify-between border-b border-white/5 pb-4">
+        <div className="flex items-center gap-2">
+          <Music size={20} className="text-purple-450 animate-pulse" />
+          <h2 className="text-xl font-bold tracking-tight text-white/95 text-ellipsis overflow-hidden">Music Player</h2>
+        </div>
+        <button
+          onClick={toggleVideo}
+          className={`text-[10px] sm:text-xs font-mono flex items-center gap-1.5 uppercase tracking-widest px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+            showVideo 
+              ? 'bg-purple-500/20 text-purple-400 border-purple-500/30 shadow-[0_0_12px_rgba(168,85,247,0.2)]'
+              : 'bg-white/5 text-white/50 border-white/10 hover:bg-white/10'
+          }`}
+        >
+          <Tv size={14} />
+          {showVideo ? 'Hide Video' : 'See Video'}
+        </button>
+      </div>
+
+      {/* Main Panel */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-white/[0.02] border border-white/5 rounded-[32px] p-6 shadow-inner">
+        
+        {/* Left column: Visual CD Vinyl or Frame Embed */}
+        <div className="md:col-span-5 flex justify-center items-center relative overflow-hidden">
+          <div className="relative w-48 h-48 sm:w-56 sm:h-56 max-w-full flex items-center justify-center">
+            
+            {/* Hidden/revealed YouTube iframe with proper play hooks */}
+            <div 
+              className={`absolute inset-0 transition-opacity duration-500 rounded-2xl overflow-hidden shadow-2xl bg-black ${
+                showVideo ? 'opacity-100 z-20' : 'opacity-0 -z-10 pointer-events-none'
+              }`}
+            >
+              <iframe
+                ref={iframeRef}
+                src={`${embedUrl || ''}&origin=${window.location.origin}`}
+                className="w-full h-full border-none bg-black"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                title={title || "YouTube Audio stream"}
+              />
             </div>
+
+            {/* Simulated CD Vinyl with thumbnail cover art inside */}
+            <div className="w-full h-full rounded-full bg-neutral-900 border-4 border-neutral-800 shadow-[0_15px_40px_rgba(0,0,0,0.8)] flex items-center justify-center relative select-none">
+              
+              {/* Grooves decoration */}
+              <div className="absolute inset-2 border border-neutral-800/40 rounded-full" />
+              <div className="absolute inset-6 border border-neutral-700/20 rounded-full" />
+              <div className="absolute inset-10 border border-neutral-800/40 rounded-full" />
+              
+              <motion.div
+                animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
+                transition={isPlaying ? { repeat: Infinity, duration: 12, ease: 'linear' } : { duration: 0.5 }}
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-neutral-950 flex items-center justify-center relative shadow-md"
+              >
+                {thumbnail ? (
+                  <img src={thumbnail} alt="album art" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-tr from-cyan-600 to-purple-800 flex items-center justify-center">
+                    <Music size={28} className="text-white/80 animate-bounce" />
+                  </div>
+                )}
+                {/* Center hole design */}
+                <div className="absolute w-6 h-6 rounded-full bg-neutral-900 border-2 border-neutral-950 flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 rounded-full bg-black" />
+                </div>
+              </motion.div>
+            </div>
+            
+            {/* Ambient pulsed glow in the back of CD */}
+            <div className={`absolute inset-0 rounded-full bg-gradient-to-tr from-cyan-500/10 to-purple-500/10 -z-10 filter blur-xl ${isPlaying ? 'animate-pulse' : ''}`} />
           </div>
-          <div className="flex flex-col gap-6 px-6 py-6 sm:px-8">
-            <div className="text-center">
-              <div className="font-mono text-[10px] uppercase tracking-[0.35em] text-white/45">Now Playing</div>
-              <div className="mt-2 text-2xl font-black tracking-tight text-white sm:text-4xl">{title}</div>
-              {subtitle ? <div className="mt-2 text-sm text-white/70 sm:text-lg">{subtitle}</div> : null}
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              <button
-                onClick={() => adjustVolume(-10)}
-                className="h-16 w-16 rounded-full border border-white/15 bg-white/10 text-2xl transition hover:bg-white/15"
-              >
-                -
-              </button>
-              <button
-                onClick={togglePause}
-                className="min-w-[9rem] rounded-full border border-cyan-300/25 bg-cyan-400/15 px-6 py-4 font-semibold text-white transition hover:bg-cyan-400/25"
-              >
-                {isPaused ? 'Resume' : 'Pause'}
-              </button>
-              <button
-                onClick={() => window.parent.postMessage({ action: 'skipMusic' }, '*')}
-                className="min-w-[9rem] rounded-full border border-white/15 bg-white/10 px-6 py-4 font-semibold text-white transition hover:bg-white/15"
-              >
-                Skip
-              </button>
-              <button
-                onClick={() => adjustVolume(10)}
-                className="h-16 w-16 rounded-full border border-white/15 bg-white/10 text-2xl transition hover:bg-white/15"
-              >
-                +
-              </button>
-              <button
-                onClick={() => window.parent.postMessage({ action: 'dismissMusic' }, '*')}
-                className="rounded-full border border-white/15 bg-white/10 px-6 py-4 font-semibold text-white transition hover:bg-white/15"
-              >
-                Dismiss
-              </button>
-            </div>
-            <div className="mx-auto w-full max-w-xl">
-              <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.28em] text-white/45">
-                <span>Volume</span>
-                <span>{currentVolume}%</span>
-              </div>
-              <div className="mt-2 h-3 overflow-hidden rounded-full bg-white/10">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-sky-400 to-indigo-400 transition-all"
-                  style={{ width: `${currentVolume}%` }}
+        </div>
+
+        {/* Right column: Details, waveform and player control buttons */}
+        <div className="md:col-span-7 flex flex-col gap-6 w-full">
+          <div>
+            <span className="text-xs font-mono tracking-widest text-purple-400 font-bold uppercase bg-purple-950/45 px-2.5 py-1 rounded-full border border-purple-500/12 inline-block">
+              NOW PLAYING
+            </span>
+            <h3 className="text-xl md:text-2xl font-extrabold tracking-tight text-white mt-2 leading-snug line-clamp-2">
+              {title || 'Loading audio query...'}
+            </h3>
+            <p className="text-xs font-mono text-white/40 mt-1 uppercase tracking-wide">YouTube Stream Link</p>
+          </div>
+
+          {/* Custom micro wave visualizer */}
+          <div className="flex items-center gap-3.5 bg-white/[0.01] border border-white/5 rounded-2xl py-3 px-4 w-fit">
+            <span className="text-xs font-mono text-white/50 tracking-wider">LIVE COMPONENT</span>
+            <div className="flex items-end gap-1.5 h-6">
+              {[...Array(8)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="w-1 bg-gradient-to-t from-cyan-400 to-purple-500 rounded-full"
+                  animate={isPlaying ? {
+                    height: [6, Math.random() * 18 + 6, 6]
+                  } : { height: 6 }}
+                  transition={{
+                    duration: 0.6 + i * 0.1,
+                    repeat: Infinity,
+                    ease: 'easeInOut'
+                  }}
                 />
-              </div>
+              ))}
             </div>
           </div>
+
+          {/* Time slider details */}
+          <div className="flex flex-col gap-1.5 w-full">
+            <input
+              type="range"
+              min={0}
+              max={duration}
+              value={currentTime}
+              onChange={handleSeekChange}
+              className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500 hover:accent-purple-400 transition-colors"
+            />
+            <div className="flex items-center justify-between font-mono text-[10px] text-white/40 font-bold">
+              <span>{formatSeconds(currentTime)}</span>
+              <span>{formatSeconds(duration)}</span>
+            </div>
+          </div>
+
+          {/* Media Interactive Controls bar */}
+          <div className="flex flex-col sm:flex-row items-center gap-6 justify-between border-t border-white/5 pt-5 mt-2">
+            
+            {/* Play/Pause Button */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handlePlayPause}
+                className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 transform active:scale-90 hover:scale-105 cursor-pointer shadow-lg ${
+                  isPlaying 
+                    ? 'bg-gradient-to-b from-purple-500 to-purple-700 text-white shadow-purple-650/20' 
+                    : 'bg-white text-black shadow-white/10'
+                }`}
+              >
+                {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
+              </button>
+              <div className="text-xs text-white/50 font-medium">
+                {isPlaying ? 'Playing track...' : 'Track paused'}
+              </div>
+            </div>
+
+            {/* Custom volume input */}
+            <div className="flex items-center gap-2.5 bg-white/5 hover:bg-white/10 transition-colors py-2 px-4 rounded-2xl border border-white/5">
+              <Volume2 size={16} className="text-white/60" />
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={volume}
+                onChange={handleVolumeChange}
+                className="w-20 hover:w-24 transition-all h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                title="Volume control"
+              />
+              <span className="text-[10px] font-mono text-white/40 w-6 text-right font-bold">{volume}%</span>
+            </div>
+
+          </div>
+
         </div>
       </div>
     </div>
   );
 };
 
-type EyeKeyframe = {
-  at: number;
-  left?: {
-    x?: number;
-    y?: number;
-    width?: number;
-    height?: number;
-    color?: string;
-    roundness?: number;
-    rotateDeg?: number;
-    fillMode?: 'color' | 'gradient' | 'media';
-    gradientFrom?: string;
-    gradientTo?: string;
-    mediaUrl?: string;
-    shape?: {
-      points: Array<{
-        x: number;
-        y: number;
-        inX: number;
-        inY: number;
-        outX: number;
-        outY: number;
-      }>;
-    };
-  };
-  right?: {
-    x?: number;
-    y?: number;
-    width?: number;
-    height?: number;
-    color?: string;
-    roundness?: number;
-    rotateDeg?: number;
-    fillMode?: 'color' | 'gradient' | 'media';
-    gradientFrom?: string;
-    gradientTo?: string;
-    mediaUrl?: string;
-    shape?: {
-      points: Array<{
-        x: number;
-        y: number;
-        inX: number;
-        inY: number;
-        outX: number;
-        outY: number;
-      }>;
-    };
-  };
-};
+export const AiroImageWidget = ({ data, onSaveToLibrary, onGenerationComplete }: { data: any, onSaveToLibrary?: (item: any) => void, onGenerationComplete?: (prompt: string) => void }) => {
+  const [history, setHistory] = useState<Array<{ url: string; prompt: string; timestamp: number }>>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(-1);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [loadingProgress, setLoadingProgress] = useState<number>(0);
+  const [loadingText, setLoadingText] = useState<string>("Peeling pixels...");
+  const [error, setError] = useState<string | null>(null);
 
-export const EyesAnimationWidget = ({ data }: { data: any }) => {
-  const durationMs = Math.max(250, Number(data?.durationMs) || 1500);
-  const loop = data?.loop !== false;
-  const frames = (Array.isArray(data?.keyframes) ? data.keyframes : []) as EyeKeyframe[];
-  const sortedFrames = frames
-    .map((frame) => ({ ...frame, at: Math.max(0, Math.min(1, Number(frame.at) || 0)) }))
-    .sort((a, b) => a.at - b.at);
-
-  const fallbackFrames: EyeKeyframe[] = sortedFrames.length
-    ? sortedFrames
-    : [
-        { at: 0, left: { x: 35, y: 56, width: 190, height: 190, color: '#ffffff', roundness: 999, rotateDeg: 0 }, right: { x: 65, y: 56, width: 190, height: 190, color: '#ffffff', roundness: 999, rotateDeg: 0 } },
-        { at: 0.5, left: { x: 35, y: 56, width: 190, height: 62, color: '#9bd7ff', roundness: 28, rotateDeg: -6 }, right: { x: 65, y: 56, width: 190, height: 62, color: '#9bd7ff', roundness: 28, rotateDeg: 6 } },
-        { at: 1, left: { x: 35, y: 56, width: 190, height: 190, color: '#ffffff', roundness: 999, rotateDeg: 0 }, right: { x: 65, y: 56, width: 190, height: 190, color: '#ffffff', roundness: 999, rotateDeg: 0 } },
-      ];
-
-  const transition = {
-    duration: durationMs / 1000,
-    ease: 'easeInOut' as const,
-    repeat: loop ? Infinity : 0,
-    times: fallbackFrames.map((frame) => frame.at),
-  };
-  const [activeFrameIndex, setActiveFrameIndex] = useState(0);
+  const loadingTexts = [
+    "Painting pixels...",
+    "Growing visual molecules...",
+    "Synthesizing image...",
+    "Polishing textures...",
+    "Rendering custom photons...",
+    "Finalizing image..."
+  ];
 
   useEffect(() => {
-    let raf = 0;
-    const startedAt = performance.now();
-    const tick = (time: number) => {
-      const elapsed = time - startedAt;
-      const cycle = loop ? elapsed % durationMs : Math.min(elapsed, durationMs);
-      const progress = cycle / durationMs;
-      let idx = fallbackFrames.length - 1;
-      for (let i = 0; i < fallbackFrames.length; i += 1) {
-        if (progress <= fallbackFrames[i].at) {
-          idx = i;
-          break;
-        }
-      }
-      setActiveFrameIndex(idx);
-      if (loop || elapsed < durationMs) {
-        raf = requestAnimationFrame(tick);
-      }
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [durationMs, loop, JSON.stringify(fallbackFrames)]);
+    if (!data?.prompt) return;
 
-  const getEyeFillStyle = (eye: EyeKeyframe['left'], id: string): { fill: string; defs: React.ReactNode } => {
-    const mode = eye?.fillMode || 'color';
-    if (mode === 'media' && eye?.mediaUrl) {
-      return {
-        fill: `url(#${id}-media)`,
-        defs: (
-          <pattern id={`${id}-media`} patternUnits="objectBoundingBox" width="1" height="1">
-            <image href={String(eye.mediaUrl)} x="0" y="0" width="1" height="1" preserveAspectRatio="xMidYMid slice" />
-          </pattern>
-        ),
-      };
+    // Check if we already have this generation running to prevent duplicates
+    const newPrompt = data.prompt;
+    const isNew = !history.some(
+      h => h.prompt === newPrompt && Math.abs(h.timestamp - data.timestamp) < 500
+    );
+
+    if (isNew) {
+      generateImage(newPrompt);
     }
-    if (mode === 'gradient') {
-      return {
-        fill: `url(#${id}-grad)`,
-        defs: (
-          <linearGradient id={`${id}-grad`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={String(eye?.gradientFrom || eye?.color || '#ffffff')} />
-            <stop offset="100%" stopColor={String(eye?.gradientTo || '#7dd3fc')} />
-          </linearGradient>
-        ),
-      };
+  }, [data?.prompt, data?.timestamp]);
+
+  // Rotate loading text
+  useEffect(() => {
+    if (!isGenerating) return;
+    let textIdx = 0;
+    const interval = setInterval(() => {
+      textIdx = (textIdx + 1) % loadingTexts.length;
+      setLoadingText(loadingTexts[textIdx]);
+    }, 1800);
+    return () => clearInterval(interval);
+  }, [isGenerating]);
+
+  const generateImage = async (promptText: string) => {
+    setIsGenerating(true);
+    setLoadingProgress(0);
+    setLoadingText("Painting pixels...");
+    setError(null);
+
+    // Start progress counter
+    const progressInterval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 96) {
+          clearInterval(progressInterval);
+          return 96;
+        }
+        return prev + Math.floor(Math.random() * 6) + 3;
+      });
+    }, 120);
+
+    try {
+      const seed = Math.floor(Math.random() * 1000000);
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(
+        promptText
+      )}?width=1024&height=1024&nologo=true&seed=${seed}`;
+
+      // Preload image
+      const img = new Image();
+      img.src = imageUrl;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = () => reject(new Error("Failed to load generated image"));
+      });
+
+      clearInterval(progressInterval);
+      setLoadingProgress(100);
+
+      setTimeout(() => {
+        setHistory(prev => {
+          const newHistory = [...prev, { url: imageUrl, prompt: promptText, timestamp: Date.now() }];
+          setCurrentIndex(newHistory.length - 1);
+          return newHistory;
+        });
+        setIsGenerating(false);
+        if (onGenerationComplete) onGenerationComplete(promptText);
+      }, 200);
+
+    } catch (err: any) {
+      clearInterval(progressInterval);
+      console.error(err);
+      setError("AirowImages encountered an error! Tap anywhere or try again.");
+      setIsGenerating(false);
     }
-    return {
-      fill: String(eye?.color || '#ffffff'),
-      defs: null,
-    };
   };
 
-  const EyeNode = ({ side }: { side: 'left' | 'right' }) => (
-    <motion.div
-      className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/15 p-[6px]"
-      animate={{
-        left: fallbackFrames.map((frame) => `${Number(frame[side]?.x ?? 50)}%`),
-        top: fallbackFrames.map((frame) => `${Number(frame[side]?.y ?? 56)}%`),
-        width: fallbackFrames.map((frame) => Number(frame[side]?.width ?? 190)),
-        height: fallbackFrames.map((frame) => Number(frame[side]?.height ?? 190)),
-        rotate: fallbackFrames.map((frame) => Number(frame[side]?.rotateDeg ?? 0)),
-      }}
-      transition={transition}
-    >
-      <svg className="h-full w-full overflow-visible" viewBox={`0 0 ${Number(fallbackFrames[0]?.[side]?.width || 190)} ${Number(fallbackFrames[0]?.[side]?.height || 190)}`}>
-        {(() => {
-          const current = fallbackFrames[Math.max(0, Math.min(activeFrameIndex, fallbackFrames.length - 1))]?.[side];
-          const fill = getEyeFillStyle(current, `runtime-eye-${side}`);
-          return (
-            <>
-              <defs>{fill.defs}</defs>
-              <motion.path
-                d={eyeToPathD(current)}
-                fill={fill.fill}
-                animate={{
-                  d: fallbackFrames.map((frame) => eyeToPathD(frame?.[side])),
-                }}
-                transition={transition}
-                style={{ filter: 'drop-shadow(0 0 22px rgba(255,255,255,0.55))' }}
-              />
-            </>
-          );
-        })()}
-      </svg>
-    </motion.div>
-  );
+  const handlePrev = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+      playSound.bubblyPop();
+    }
+  };
+
+  const handleNext = () => {
+    if (currentIndex < history.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+      playSound.bubblyPop();
+    }
+  };
+
+  const handleDownload = () => {
+    if (currentIndex >= 0 && currentIndex < history.length) {
+      const current = history[currentIndex];
+      window.open(current.url, '_blank');
+      playSound.bubblyPop();
+    }
+  };
+
+  const currentItem = history[currentIndex];
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-black">
-      <EyeNode side="left" />
-      <EyeNode side="right" />
+    <div className="flex flex-col items-center justify-between w-full h-full bg-slate-950 text-white p-4 sm:p-6 min-h-[380px] font-sans">
+      {/* Top bar with stats */}
+      <div className="w-full flex justify-between items-center mb-3">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-xl bg-blue-500/10 text-blue-400">
+            <Sparkles size={18} className="animate-pulse" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold tracking-tight text-white/95">AirowImages AI</h3>
+            <p className="text-[10px] font-mono text-blue-400/80 uppercase tracking-widest">Cohesive Generative Lab</p>
+          </div>
+        </div>
+
+        {history.length > 0 && (
+          <div className="flex items-center gap-2 bg-white/5 border border-white/5 px-3 py-1 rounded-full text-xs font-mono text-white/60">
+            <History size={12} className="text-blue-400" />
+            <span>{currentIndex + 1} / {history.length}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 w-full flex flex-col md:flex-row items-center justify-center gap-6 max-h-[400px]">
+        {/* Canvas Display */}
+        <div className="relative aspect-square w-full max-w-[280px] sm:max-w-[320px] bg-slate-900/50 border border-white/10 rounded-[32px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+          {/* History cross-fade */}
+          {history.map((item, index) => (
+            <motion.div
+              key={item.url}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: index === currentIndex ? 1 : 0 }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+              className="absolute inset-0"
+              style={{ zIndex: index === currentIndex ? 10 : 1 }}
+            >
+              <img
+                src={item.url}
+                alt={item.prompt}
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            </motion.div>
+          ))}
+
+          {/* Initial State / empty history */}
+          {history.length === 0 && !isGenerating && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white/40 gap-3">
+              <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-blue-400/60 animate-bounce">
+                <LucideImage size={28} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white/80">Awaiting prompt...</p>
+                <p className="text-[11px] max-w-[180px] mx-auto mt-1">Ask "Airow, generate an image of a cybernetic monkey!"</p>
+              </div>
+            </div>
+          )}
+
+          {/* Blur transition backdrop when generating (previous image stays visible but blurred underneath!) */}
+          {isGenerating && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-20 bg-slate-950/70 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center"
+            >
+              {/* Circular spinning outline */}
+              <div className="relative w-20 h-20 mb-4 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r="34"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    className="text-white/10"
+                    fill="transparent"
+                  />
+                  <motion.circle
+                    cx="40"
+                    cy="40"
+                    r="34"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    className="text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                    fill="transparent"
+                    strokeDasharray="213"
+                    animate={{ strokeDashoffset: 213 - (213 * loadingProgress) / 100 }}
+                    transition={{ ease: "easeInOut" }}
+                  />
+                </svg>
+                {/* Center icon */}
+                <span className="absolute text-2xl animate-pulse text-blue-400">
+                  <LucideImage size={24} />
+                </span>
+              </div>
+
+              {/* Loader stats */}
+              <h4 className="text-sm font-bold text-white tracking-wide animate-pulse">{loadingText}</h4>
+              <p className="text-[10px] font-mono text-blue-400/80 mt-1.5 bg-blue-400/10 px-2.5 py-0.5 rounded-full border border-blue-400/20">{loadingProgress}% COMPLETE</p>
+            </motion.div>
+          )}
+
+          {/* Error fallback overlay */}
+          {error && (
+            <div className="absolute inset-0 z-30 bg-red-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
+              <span className="text-3xl mb-2">⚠️</span>
+              <p className="text-xs font-semibold text-red-200">{error}</p>
+              <button 
+                onClick={() => generateImage(data?.prompt || "A golden digital banana")}
+                className="mt-3 text-[10px] font-bold uppercase tracking-widest bg-white/10 hover:bg-white/25 px-3 py-1.5 rounded-lg border border-white/10 transition-all"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Text Prompt & Controls Column */}
+        <div className="flex-1 flex flex-col justify-center max-w-[280px] sm:max-w-[320px] text-center md:text-left gap-3">
+          {currentItem ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 text-blue-400/90 text-xs font-mono font-bold tracking-wider uppercase justify-center md:justify-start">
+                <Layers size={12} />
+                <span>ACTIVE SPECIFICATION</span>
+              </div>
+              <p className="text-xs text-white/80 leading-relaxed bg-white/5 border border-white/5 px-3.5 py-2.5 rounded-2xl max-h-[85px] overflow-y-auto text-left custom-scrollbar">
+                "{currentItem.prompt}"
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 text-white/40 text-xs font-mono font-bold tracking-wider uppercase justify-center md:justify-start">
+                <Cpu size={12} />
+                <span>STANDBY MODE</span>
+              </div>
+              <p className="text-xs text-white/40 leading-relaxed bg-white/5 border border-white/5 px-3.5 py-2.5 rounded-2xl text-left">
+                No specifications active yet. Say "Hey Arrow, generate an image of a golden robot monkey eating a holographic banana!"
+              </p>
+            </div>
+          )}
+
+          {/* Nav & Utility Controls */}
+          {history.length > 0 && (
+            <div className="flex items-center justify-between gap-3 mt-1.5">
+              <div className="flex gap-2">
+                <button
+                  disabled={currentIndex <= 0}
+                  onClick={handlePrev}
+                  className={`p-2.5 rounded-xl border transition-all ${
+                    currentIndex <= 0 
+                      ? 'border-white/5 text-white/20 bg-transparent' 
+                      : 'border-white/10 text-white/80 hover:text-white bg-white/5 hover:bg-white/10 active:scale-95'
+                  }`}
+                  title="Previous iteration"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  disabled={currentIndex >= history.length - 1}
+                  onClick={handleNext}
+                  className={`p-2.5 rounded-xl border transition-all ${
+                    currentIndex >= history.length - 1 
+                      ? 'border-white/5 text-white/20 bg-transparent' 
+                      : 'border-white/10 text-white/80 hover:text-white bg-white/5 hover:bg-white/10 active:scale-95'
+                  }`}
+                  title="Next iteration"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (onSaveToLibrary && currentItem) {
+                    onSaveToLibrary({ url: currentItem.url, prompt: currentItem.prompt, timestamp: currentItem.timestamp, type: 'generated' });
+                    playSound.bubblySuccess();
+                  }
+                }}
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-xs font-bold transition-all shadow-[0_4px_12px_rgba(234,179,8,0.2)] active:scale-95"
+              >
+                <Download size={14} strokeWidth={2.5} />
+                <span>SAVE TO LIBRARY</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
-  const createDefaultShape = () => ({
-    points: [
-      { x: 0.5, y: 0.08, inX: -0.22, inY: 0, outX: 0.22, outY: 0 },
-      { x: 0.92, y: 0.5, inX: 0, inY: -0.22, outX: 0, outY: 0.22 },
-      { x: 0.5, y: 0.92, inX: 0.22, inY: 0, outX: -0.22, outY: 0 },
-      { x: 0.08, y: 0.5, inX: 0, inY: 0.22, outX: 0, outY: -0.22 },
-    ],
-  });
 
-  const eyeToPathD = (eye: any) => {
-    const points = eye?.shape?.points || createDefaultShape().points;
-    if (!Array.isArray(points) || points.length < 2) return '';
-    const toAbs = (point: any) => ({ x: Number(point.x) * Number(eye.width), y: Number(point.y) * Number(eye.height) });
-    const first = toAbs(points[0]);
-    const parts = [`M ${first.x.toFixed(2)} ${first.y.toFixed(2)}`];
-    for (let i = 0; i < points.length; i += 1) {
-      const current = points[i];
-      const next = points[(i + 1) % points.length];
-      const c1 = { x: (Number(current.x) + Number(current.outX || 0)) * Number(eye.width), y: (Number(current.y) + Number(current.outY || 0)) * Number(eye.height) };
-      const c2 = { x: (Number(next.x) + Number(next.inX || 0)) * Number(eye.width), y: (Number(next.y) + Number(next.inY || 0)) * Number(eye.height) };
-      const p2 = toAbs(next);
-      parts.push(`C ${c1.x.toFixed(2)} ${c1.y.toFixed(2)}, ${c2.x.toFixed(2)} ${c2.y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`);
-    }
-    parts.push('Z');
-    return parts.join(' ');
+export const VolumeWidget = ({ data }: { data: { volume: number } }) => {
+  const [vol, setVol] = useState(data.volume);
+
+  useEffect(() => {
+    setVol(data.volume);
+  }, [data.volume]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value);
+    setVol(val);
+    setSoundVolume(val / 10);
   };
+
+  return (
+    <div className="w-full text-white p-6 max-h-[75%] flex flex-col gap-8 items-center justify-center h-full">
+      <div className="flex items-center gap-4 text-blue-400">
+        {vol === 0 ? <VolumeX size={48} /> : <Volume2 size={48} />}
+        <span className="text-5xl font-black">{vol}</span>
+      </div>
+      
+      <div className="w-full max-w-sm px-4">
+        <input 
+          type="range" 
+          min="0" max="10" step="1" 
+          value={vol} 
+          onChange={handleChange}
+          className="w-full h-4 bg-white/20 rounded-full appearance-none outline-none focus:outline-none focus:ring-4 focus:ring-blue-500/50 cursor-pointer"
+          style={{
+            background: `linear-gradient(to right, #3b82f6 ${(vol/10)*100}%, rgba(255,255,255,0.2) ${(vol/10)*100}%)`
+          }}
+        />
+        <div className="flex justify-between w-full text-xs font-bold text-white/40 mt-3 px-1">
+          <span>0</span>
+          <span>5</span>
+          <span>10</span>
+        </div>
+      </div>
+      
+      <p className="text-sm font-bold text-white/50 tracking-widest uppercase">System Volume</p>
+    </div>
+  );
+};
+
+export const PhotoPreviewWidget = ({ onSaveToLibrary }: { onSaveToLibrary?: (item: any) => void }) => {
+  const [countdown, setCountdown] = useState<number | null>(3);
+  const [flash, setFlash] = useState(false);
+  const [photoData, setPhotoData] = useState<string | null>(null);
+  const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    let isActive = true;
+    getSharedCamera().then(({ video }) => {
+        if (isActive) {
+            setGlobalVideoElement(video);
+            setVideoEl(video);
+        }
+    }).catch(err => {
+        console.error("Camera error in PhotoPreviewWidget:", err);
+    });
+
+    return () => {
+        isActive = false;
+        releaseSharedCamera();
+    };
+  }, []);
+
+  useEffect(() => {
+    let animationId: number;
+    const canvas = document.getElementById('camera-preview-canvas') as HTMLCanvasElement;
+    if (canvas && !photoData) {
+        const ctx = canvas.getContext('2d');
+        const drawFrame = () => {
+          if (videoEl && ctx && canvas) {
+            ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+          } else if (globalVideoElement && ctx && canvas) {
+            ctx.drawImage(globalVideoElement, 0, 0, canvas.width, canvas.height);
+          }
+          animationId = requestAnimationFrame(drawFrame);
+        };
+        drawFrame();
+    }
+    return () => cancelAnimationFrame(animationId);
+  }, [photoData, videoEl]);
+
+  useEffect(() => {
+    if (countdown === null) return;
+    if (countdown > 0) {
+      playSound.bubblyPop();
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (countdown === 0) {
+      setFlash(true);
+      playSound.bubblySuccess();
+      captureCameraFrame().then(dataUrl => {
+        if (dataUrl) {
+           setPhotoData(dataUrl);
+           setTimeout(() => setFlash(false), 200);
+           window.dispatchEvent(new CustomEvent('airo-photo-ready'));
+        }
+      });
+      setCountdown(null);
+    }
+  }, [countdown]);
+
+  const handleKeep = () => {
+      playSound.bubblySuccess();
+      if (onSaveToLibrary && photoData) {
+          onSaveToLibrary({ url: photoData, timestamp: Date.now(), type: 'photo' });
+      }
+      window.dispatchEvent(new CustomEvent('airo-photo-action', { detail: 'Keep' }));
+  };
+
+  const handleDiscard = () => {
+      playSound.bubblyPop();
+      window.dispatchEvent(new CustomEvent('airo-photo-action', { detail: 'Discard' }));
+  };
+
+  useEffect(() => {
+    const handleVoiceTrigger = (e: any) => {
+        if (!photoData) return;
+        const action = (e.detail || '').toLowerCase();
+        if (action === 'yes' || action === 'keep') handleKeep();
+        if (action === 'no' || action === 'discard') handleDiscard();
+    };
+    window.addEventListener('airo-voice-trigger', handleVoiceTrigger);
+    return () => window.removeEventListener('airo-voice-trigger', handleVoiceTrigger);
+  }, [photoData, onSaveToLibrary]);
+
+  return (
+    <div className="flex flex-col items-center justify-center w-full h-full bg-slate-950/80 backdrop-blur-3xl overflow-hidden p-6 sm:p-12 relative min-h-[380px]">
+      <motion.div 
+         layout
+         className={`relative bg-black rounded-[32px] overflow-hidden border-4 border-slate-800 shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${photoData ? 'aspect-video w-[60%] shrink-0' : 'w-full h-full'}`}
+      >
+         {!photoData ? (
+           <>
+             <canvas id="camera-preview-canvas" width={1920} height={1080} className="w-full h-full object-cover scale-x-[-1]" />
+             {countdown !== null && countdown > 0 && (
+               <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                 <motion.span 
+                   key={countdown}
+                   initial={{ scale: 2, opacity: 0 }}
+                   animate={{ scale: 1, opacity: 1 }}
+                   exit={{ scale: 0.5, opacity: 0 }}
+                   className="text-9xl font-black text-white drop-shadow-[0_0_40px_rgba(255,255,255,1)] tracking-tighter"
+                 >
+                   {countdown}
+                 </motion.span>
+               </div>
+             )}
+             {flash && <div className="absolute inset-0 bg-white z-50"></div>}
+           </>
+         ) : (
+           <img src={photoData} className="w-full h-full object-cover scale-x-[-1]" />
+         )}
+      </motion.div>
+      
+      <AnimatePresence>
+          {photoData && (
+              <motion.div 
+                 initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                 animate={{ opacity: 1, y: 0, scale: 1 }}
+                 transition={{ delay: 0.5, type: 'spring' }}
+                 className="absolute bottom-12 left-0 right-0 flex justify-center gap-16 px-8"
+              >
+                  <div className="flex flex-col items-center gap-4 shrink-0">
+                    <button 
+                        onClick={handleDiscard}
+                        className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-b from-red-400 to-red-600 flex items-center justify-center shadow-[0_20px_50px_rgba(220,38,38,0.5)] hover:scale-110 active:scale-95 transition-all"
+                    >
+                        <X size={64} className="text-white drop-shadow-lg" />
+                    </button>
+                    <span className="text-xl font-bold text-white tracking-widest drop-shadow-md uppercase">Discard</span>
+                  </div>
+                  
+                  <div className="flex flex-col items-center gap-4 shrink-0">
+                    <button 
+                        onClick={handleKeep}
+                        className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-b from-green-400 to-green-600 flex items-center justify-center shadow-[0_20px_50px_rgba(22,163,74,0.5)] hover:scale-110 active:scale-95 transition-all animate-pulse"
+                    >
+                        <Check size={64} className="text-white drop-shadow-lg" />
+                    </button>
+                    <span className="text-xl font-bold text-white tracking-widest drop-shadow-md uppercase">Keep</span>
+                  </div>
+              </motion.div>
+          )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export const FaceOnboardingWidget = ({ data, onComplete }: { data: any, onComplete: () => void }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const name = data?.name || 'Friend';
+  const [captured, setCaptured] = useState(false);
+
+  useEffect(() => {
+      getSharedCamera().then(res => {
+          if (videoRef.current && res.stream) {
+              videoRef.current.srcObject = res.stream;
+              videoRef.current.play().catch(e => console.warn("Video play failed:", e));
+          }
+      }).catch(console.error);
+  }, []);
+
+  const handleCapture = () => {
+      if (captured) return;
+      if (videoRef.current && canvasRef.current) {
+          const video = videoRef.current;
+          const canvas = canvasRef.current;
+          canvas.width = video.videoWidth || 640;
+          canvas.height = video.videoHeight || 480;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              const image = canvas.toDataURL('image/jpeg', 0.8);
+              
+              try {
+                  const familyMembers = JSON.parse(localStorage.getItem('airo_family_members') || '[]');
+                  const updated = [...familyMembers, { name: name.trim(), image }];
+                  localStorage.setItem('airo_family_members', JSON.stringify(updated));
+                  console.log("Saved new family member:", name);
+              } catch (e) {
+                  console.error("Failed to save family member", e);
+              }
+              
+              playSound.bubblySuccess();
+              setCaptured(true);
+              setTimeout(() => {
+                  onComplete();
+              }, 1500);
+          }
+      }
+  };
+
+  return (
+      <div 
+          className="w-full h-full min-h-[400px] flex flex-col items-center justify-center relative overflow-hidden bg-black text-white cursor-pointer rounded-3xl"
+          onClick={(e) => { e.stopPropagation(); handleCapture(); }}
+      >
+          <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              muted 
+              className="absolute inset-0 w-full h-full object-cover opacity-60"
+          />
+          <canvas ref={canvasRef} className="hidden" />
+          
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center z-10 pointer-events-none bg-gradient-to-t from-black/80 via-transparent to-black/40">
+              <div className="w-64 h-64 border-4 border-dashed border-rose-500/50 rounded-full mb-8 animate-[spin_10s_linear_infinite] flex items-center justify-center">
+                  <div className="w-56 h-56 border-2 border-solid border-rose-400/30 rounded-full animate-pulse" />
+              </div>
+              <h2 className="text-4xl font-bold mb-4 tracking-tight drop-shadow-lg">Line up your face!</h2>
+              <p className="text-rose-200/80 text-xl font-medium px-6 py-3 bg-black/40 rounded-full backdrop-blur-md">
+                  Tap anywhere to save as <span className="text-white font-bold">{name}</span>
+              </p>
+          </div>
+          
+          <AnimatePresence>
+              {captured && (
+                  <motion.div 
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0 z-50 bg-rose-600 flex flex-col items-center justify-center"
+                  >
+                      <Check className="w-32 h-32 text-white mb-6 animate-bounce" />
+                      <h2 className="text-5xl font-bold text-white tracking-tight drop-shadow-xl">Got it!</h2>
+                  </motion.div>
+              )}
+          </AnimatePresence>
+      </div>
+  );
+};

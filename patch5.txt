@@ -1,0 +1,18 @@
+                          else if (fc.name === 'get_weather') {
+                              let { latitude, longitude, location: toolLocation } = fc.args as any;
+                              try {
+                                  if ((!toolLocation || toolLocation.toLowerCase() === "my location" || toolLocation === "Your Location" || toolLocation === "Unknown") && location) {
+                                      toolLocation = location;
+                                  }
+                                  let resolvedLocation = toolLocation || "";
+                                  if ((latitude === undefined || longitude === undefined) && toolLocation) {
+                                      const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(toolLocation)}&count=1&language=en&format=json`);
+                                      const geoData = await geoRes.json();
+                                      if (geoData.results && geoData.results.length > 0) {
+                                          latitude = geoData.results[0].latitude;
+                                          longitude = geoData.results[0].longitude;
+                                          resolvedLocation = geoData.results[0].name;
+                                      } else {
+                                          throw new Error(`Location '${toolLocation}' not found`);
+                                      }
+                                  }

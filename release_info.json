@@ -1,0 +1,13 @@
+{
+  "version": "1.12",
+  "fullVersion": "1.6.6 (Beta)",
+  "build": "A2HF274",
+  "releaseDate": "June 29 2026",
+  "gradient": "from-cyan-400 to-purple-600",
+  "changelog": [
+    "Implemented multi-tier Error Catching System (Red, Blue, Green)",
+    "Added /errorlogs page for remote debugging",
+    "Improved AI response flow to prioritize answers over follow-ups",
+    "Enhanced eye tracking reactivity for person and sound detection"
+  ]
+}

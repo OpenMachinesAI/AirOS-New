@@ -1,0 +1,29 @@
+{
+  "name": "megapi",
+  "version": "0.1.3",
+  "description": "node for megapi firmware",
+  "main": "./megapi",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Makeblock-Official/NodeForMegaPi"
+  },
+  "keywords": [
+    "mega pi",
+    "raspberry pi",
+    "arduino",
+    "mega2560"
+  ],
+ "dependencies" :
+  { 
+	"serialport" : "=2.0.0"
+  },
+  "author": "ander@makeblock.cc",
+  "license": "MIT",
+  "readme": "",
+  "bugs": {
+    "url": "https://github.com/Makeblock-Official/NodeForMegaPi/issues"
+  }
+}

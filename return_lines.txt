@@ -1,0 +1,140 @@
+146:      return () => {
+205:          return stored ? JSON.parse(stored) : [];
+207:          return [];
+217:          return newItems;
+227:          return newItems;
+281:    return () => {
+324:    return () => {
+359:        return () => {
+423:        return updated;
+432:              return { ...prevVis, content: { timers: updated } };
+434:            return prevVis;
+436:          return updated;
+444:          return !label.includes(titleToCancel) && !titleToCancel.includes(label);
+451:              return { ...prevVis, content: { timers: updated } };
+453:            return prevVis;
+456:        return updated;
+466:            return { ...t, running: false, endTime: undefined, highlighted: true };
+468:          return { ...t, highlighted: false };
+475:        return updated;
+485:                return { ...prevVis, content: { timers: updated } };
+487:              return prevVis;
+489:            return updated;
+501:            return { ...t, running: true, endTime: Date.now() + t.remainingSeconds * 1000, highlighted: true };
+503:          return { ...t, highlighted: false };
+510:        return updated;
+520:                return { ...prevVis, content: { timers: updated } };
+522:              return prevVis;
+524:            return updated;
+536:            return { ...t, highlighted: true };
+538:          return { ...t, highlighted: false };
+545:        return updated;
+555:                return { ...prevVis, content: { timers: updated } };
+557:              return prevVis;
+559:            return updated;
+586:            return { ...prevVis, content: { timers: updated } };
+588:          return prevVis;
+591:      return updated;
+601:              return { ...prevVis, content: { timers: updated } };
+603:            return prevVis;
+605:          return updated;
+657:          return false;
+678:          return true;
+699:                          return now - lastGreeted > COOLDOWN_MS;
+718:                          return true;
+738:              return true;
+756:      return true;
+769:              return;
+787:          return;
+809:              return;
+818:                  return next;
+822:      return () => clearInterval(interval);
+907:             return;
+918:             return;
+948:    return () => {
+1001:                  return;
+1038:      return () => {
+1084:                 return null;
+1219:      return new Promise((resolve) => {
+1222:              return;
+1226:              return;
+1256:          return;
+1260:          return;
+1276:              return;
+1405:              return JSON.stringify({ status: "success", message: "Session ended" });
+1409:              return JSON.stringify({ status: "success", message: "Airo flags updated." });
+1417:                      return newMem;
+1420:              return JSON.stringify({ status: "success", message: `Saved ${key} to memory.` });
+1424:              return JSON.stringify({ status: "success", message: "Image displayed to user" });
+1433:              return JSON.stringify({ status: "success", message: "Airo image generation started visually." });
+1443:              return JSON.stringify({ status: "success", message: "Camera preview opened and countdown started. I will now wait for user confirmation." });
+1452:              return JSON.stringify({ status: "success", message: "Started face onboarding visually. I will now wait for user to tap the screen." });
+1456:              return JSON.stringify({ status: "success", message: `Triggered ${args.action} on the widget.` });
+1460:              return JSON.stringify({ status: "success", message: "Visual interface closed" });
+1481:              return JSON.stringify({ status: "success", message: "Custom code widget rendered on screen" });
+1485:              return JSON.stringify({ status: "success", message: `Timer created for ${args.durationSeconds} seconds with title ${args.title || "unnamed"}` });
+1489:              return JSON.stringify({ status: "success", message: "Settings widget displayed" });
+1493:              return JSON.stringify({ status: "success", message: "Confirmation prompt displayed" });
+1499:              return JSON.stringify({ status: "success", message: "Volume updated." });
+1503:              return JSON.stringify({ status: "success", message: "Robot performed 360 degree spin" });
+1507:              return JSON.stringify({ status: "success", message: "Alarm and ringtone stopped successfully" });
+1511:              return JSON.stringify({ status: "success", message: `Timer cancelled: ${args.title}` });
+1515:              return JSON.stringify({ status: "success", message: `Timer paused: ${args.title}` });
+1519:              return JSON.stringify({ status: "success", message: `Timer resumed: ${args.title}` });
+1523:              return JSON.stringify({ status: "success", message: `Timer highlighted: ${args.title}` });
+1526:              return JSON.stringify({ active_timers: timers });
+1530:              return JSON.stringify({ status: "success", message: `Math widget rendered for equation ${args.expression}` });
+1534:              return JSON.stringify({ status: "success", message: "World clocks rendered" });
+1538:              return JSON.stringify({ status: "success", message: "Battery widget rendered" });
+1542:              return JSON.stringify({ status: "success", message: `Dice widget rendered showing ${args.result}` });
+1547:              return JSON.stringify({ status: "success", message: "Date board panel rendered" });
+1551:              return JSON.stringify({ status: "success", message: "News stories displayed on screen" });
+1556:                      return { ...prev, highlightedIndex: args.index };
+1558:                  return prev;
+1560:              return JSON.stringify({ status: "success", message: `Highlighted item index ${args.index}` });
+1575:                          return { ...prev, highlightedIndex: nextIndex };
+1578:                  return prev;
+1582:                  return JSON.stringify({ hasMore: nextIndex < headlinesCount - 1, index: nextIndex, headline: nextHeadline });
+1584:                  return JSON.stringify({ hasMore: false, info: "No more headlines left" });
+1591:                  return JSON.stringify({ result: sData.result });
+1593:                  return JSON.stringify({ error: "Search failed. Provide summary on your own." });
+1639:                      return "Cloudy";
+1647:                      return {
+1669:                  return JSON.stringify(widgetData);
+1687:                  return JSON.stringify(fallbackData);
+1706:                      return JSON.stringify({ status: "success", message: `Playing music video: ${ytData.title}` });
+1708:                      return JSON.stringify({ error: "Music video not found" });
+1712:                  return JSON.stringify({ error: "Failed searching/playing music on youtube" });
+1724:                          returnMsg = "Music paused";
+1727:                          returnMsg = "Music resumed";
+1731:                          returnMsg = `Music volume set to ${vol}%`;
+1733:                      return { ...prev, content: updatedContent };
+1735:                  return prev;
+1737:              return JSON.stringify({ status: "success", message: returnMsg || `Music action executed: ${action}` });
+1748:      return JSON.stringify({ status: "success" });
+1788:              return;
+1858:                      return;
+1908:                          return {
+1997:          return;
+2031:                  return;
+2198:    return () => {
+2228:            return;
+2249:            return;
+2339:      return () => clearTimeout(timeoutId);
+2374:                      return { ...t, remainingSeconds: 0, running: false, endTime: undefined };
+2376:                  return { ...t, remainingSeconds: nextRemaining };
+2390:                          return { ...prevVis, content: { timers: updated } };
+2392:                      return prevVis;
+2395:              return updated;
+2398:      return () => clearInterval(interval);
+2449:      return () => clearTimeout(timeout);
+2469:      return () => {
+2478:          return;
+2486:              return;
+2492:              return;
+2546:      return (
+2557:    return () => window.removeEventListener("airo-auto-start", autoStart);
+2561:      return (
+2588:      return (
+2613:    return (
+2667:  return (

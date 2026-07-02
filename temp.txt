@@ -1,0 +1,11 @@
+  const bKeyHeldRef = useRef(false);
+
+  const { contextData, isRemoteViewActive } = useAiroContext(robotId || '');
+
+  useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+          if (e.key.toLowerCase() === 'b') {
+              bKeyHeldRef.current = true;
+          }
+      };
+      const handleKeyUp = (e: KeyboardEvent) => {

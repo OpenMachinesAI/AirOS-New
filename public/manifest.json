@@ -1,0 +1,25 @@
+{
+  "name": "Airo Voice Assistant",
+  "short_name": "Airo",
+  "start_url": "/",
+  "display": "fullscreen",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "description": "Voice-activated AI assistant with animated eyes, powered by Gemini Live API.",
+  "orientation": "any",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 256x256 384x384 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

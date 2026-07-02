@@ -1,0 +1,51 @@
+  useEffect(() => {
+    const handlePhotoAction = (e: any) => {
+      const action = e.detail;
+      if (action === 'Keep' || action === 'Discard') {
+         if (connectionState === AppState.ACTIVE && sendClientContent) {
+             sendClientContent(`I chose to ${action} the photo. You can close the preview now.`);
+         } else if (!isRealtimeMode) {
+             runNonRealtimeTurn(`I chose to ${action} the photo. You can close the preview now.`);
+         }
+         setVisualContent(null);
+      }
+    };
+    
+    const handleConfirmationAction = (e: any) => {
+      const action = e.detail;
+      
+      // Handle proactive update prompts
+      if (visualContent?.component === 'confirmation') {
+         if (visualContent.title === 'Software Update Available') {
+             if (action === 'Yes') {
+                 window.location.hash = '#update';
+                 window.location.reload();
+             } else {
+                 setVisualContent(null);
+             }
+             return;
+         }
+         if (visualContent.title === 'Update Installed') {
+             if (action === 'Yes') {
+                 if (connectionState === AppState.ACTIVE && sendClientContent) {
+                     sendClientContent("I just updated! Can you read me your changelog from release_info.json?");
+                 } else if (!isRealtimeMode) {
+                     runNonRealtimeTurn("I just updated! Can you read me your changelog from release_info.json?");
+                 }
+             }
+             setVisualContent(null);
+             return;
+         }
+      }
+
+      if (action === 'Yes' || action === 'No') {
+         if (connectionState === AppState.ACTIVE && sendClientContent) {
+             sendClientContent(`I tapped ${action} on the confirmation widget. Let's proceed based on that.`);
+         } else if (!isRealtimeMode) {
+             runNonRealtimeTurn(`I tapped ${action} on the confirmation widget. Let's proceed based on that.`);
+         }
+         setVisualContent(null);
+      }
+    };
+
+    const handlePhotoReady = (e: any) => {

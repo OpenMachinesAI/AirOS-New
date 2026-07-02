@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Airo Voice Assistant</title>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        background-color: #000;
+        margin: 0;
+        overflow: hidden;
+      }
+      @keyframes rainbow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      .rainbow-bg {
+        background: linear-gradient(270deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+        background-size: 400% 400%;
+        animation: rainbow 2s ease infinite;
+      }
+    </style>
+
+<link rel="stylesheet" href="/index.css">
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/assets/index-B78sNEGA.js"></script>
+</head>
+  <body>
+    <div id="root"></div>
+</body>
+</html>

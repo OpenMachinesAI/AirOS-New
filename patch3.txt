@@ -1,0 +1,19 @@
+      if (updateAvailable && !hasPromptedUpdateRef.current && (!isRealtimeMode || connectionStateRef.current === AppState.IDLE)) {
+          hasPromptedUpdateRef.current = true;
+          playSound.bubblyStart();
+          const u = new SpeechSynthesisUtterance(`Hello! I have a new software update available to version ${updateAvailable}. Would you like me to install it now?`);
+          u.voice = window.speechSynthesis.getVoices().find(v => v.name.includes("Google US English")) || null;
+          u.pitch = 1.3; u.rate = 1.05;
+          window.speechSynthesis.speak(u);
+          setVisualContent({
+              type: 'predefined',
+              component: 'confirmation',
+              title: 'Software Update Available',
+              content: {
+                 subtitle: 'Version ' + updateAvailable,
+                 confirmText: 'Install',
+                 cancelText: 'Not Now'
+              }
+          });
+          return true;
+      }

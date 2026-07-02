@@ -1,6 +1,6 @@
 import { Blob } from '@google/genai';
 
-export const PCM_SAMPLE_RATE = 16000;
+export const PCM_SAMPLE_RATE = 24000;
 export const OUTPUT_SAMPLE_RATE = 24000;
 
 export function base64ToUint8Array(base64: string): Uint8Array {
@@ -33,7 +33,7 @@ export function createPcmBlob(data: Float32Array): Blob {
   }
   return {
     data: arrayBufferToBase64(int16.buffer),
-    mimeType: 'audio/pcm;rate=16000',
+    mimeType: 'audio/pcm;rate=24000',
   };
 }
 
@@ -43,7 +43,20 @@ export async function decodeAudioData(
   sampleRate: number = OUTPUT_SAMPLE_RATE,
   numChannels: number = 1
 ): Promise<AudioBuffer> {
-  const dataInt16 = new Int16Array(data.buffer);
+  const byteOffset = data.byteOffset;
+  const byteLength = data.byteLength;
+  
+  let dataInt16: Int16Array;
+  if (byteOffset % 2 === 0 && byteLength % 2 === 0) {
+    dataInt16 = new Int16Array(data.buffer, byteOffset, byteLength / 2);
+  } else {
+    // Audio chunks with odd length or misaligned offset: safely align and copy 
+    const alignedBuffer = new ArrayBuffer(byteLength % 2 === 0 ? byteLength : byteLength - 1);
+    const alignedUint8 = new Uint8Array(alignedBuffer);
+    alignedUint8.set(data.subarray(0, alignedUint8.length));
+    dataInt16 = new Int16Array(alignedBuffer);
+  }
+
   const frameCount = dataInt16.length / numChannels;
   const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
 

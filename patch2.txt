@@ -1,0 +1,31 @@
+  const [updateAvailable, setUpdateAvailable] = useState<string | null>(null);
+  const hasPromptedUpdateRef = useRef(false);
+  useEffect(() => {
+     fetch("/api/latest-version").then(res => res.json()).then(data => {
+         if (data.version && data.version !== releaseInfo.version) {
+             setUpdateAvailable(data.version);
+         }
+     }).catch(e => console.error("Update check failed", e));
+  }, []);
+  useEffect(() => {
+    if (window.location.hash === "#update") {
+       window.location.hash = "";
+       setTimeout(() => {
+           playSound.bubblySuccess();
+           const u = new SpeechSynthesisUtterance(`My systems have successfully updated to version ${releaseInfo.version}! Would you like me to tell you what's new?`);
+           u.voice = window.speechSynthesis.getVoices().find(v => v.name.includes("Google US English")) || null;
+           u.pitch = 1.3; u.rate = 1.05;
+           window.speechSynthesis.speak(u);
+           setVisualContent({
+              type: "predefined",
+              component: "confirmation",
+              title: "Update Installed",
+              content: {
+                 subtitle: "Version " + releaseInfo.version,
+                 confirmText: "What's New",
+                 cancelText: "Dismiss"
+              }
+           });
+       }, 5000);
+    }
+  }, []);

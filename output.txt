@@ -1,0 +1,109 @@
+29:  const [airoError, setAiroError] = useState<AiroError | null>(null);
+30:  const [hasStarted, setHasStarted] = useState(false);
+31:  const [bootState, setBootState] = useState<'BOOTING' | 'WAITING' | 'DONE'>('BOOTING');
+32:  const [wakeState, setWakeState] = useState(false); 
+33:  const [isPreparing, setIsPreparing] = useState(false);
+34:  const [isLoadingModels, setIsLoadingModels] = useState(false);
+35:  const [statusText, setStatusText] = useState("");
+36:  const [initialAudio, setInitialAudio] = useState<Float32Array | null>(null);
+37:  const [location, setLocation] = useState<string | null>(null);
+38:  const [airScriptState, setAirScriptState] = useState<AirScriptState | null>(null);
+39:  const [localMemory, setLocalMemory] = useState<Record<string, string>>({});
+40:  const [airoBirthday, setAiroBirthday] = useState<string>("");
+41:  const [timers, setTimers] = useState<any[]>([]);
+42:  const [mbotConnected, setMbotConnected] = useState(false);
+58:  const [permissionError, setPermissionError] = useState<string | null>(null);
+60:  const [robotId, setRobotId] = useState<string | null>(null);
+61:  const [showOnboarding, setShowOnboarding] = useState(false);
+62:  const [aiUsageSeconds, setAiUsageSeconds] = useState(0);
+66:  const [classicModePreference, setClassicModePreference] = useState<boolean>(() => {
+80:  const [qrCommanderEnabled, setQrCommanderEnabled] = useState(false);
+81:  const [qrModeActive, setQrModeActive] = useState(false);
+83:  const [activeAirCard, setActiveAirCard] = useState<AirCard | null>(null);
+84:  const [installingAirCard, setInstallingAirCard] = useState<AirCard | null>(null);
+85:  const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
+86:  const activeAirCardRef = useRef<AirCard | null>(null);
+87:  const bKeyHeldRef = useRef(false);
+88:  const tKeyHoldTimerRef = useRef<any>(null);
+89:  const [updateAvailable, setUpdateAvailable] = useState<string | null>(null);
+90:  const hasPromptedUpdateRef = useRef(false);
+91:  useEffect(() => {
+98:  useEffect(() => {
+121:  const { contextData, isRemoteViewActive } = useAiroContext(robotId || '');
+123:  useEffect(() => {
+156:  useEffect(() => {
+187:  useEffect(() => {
+191:  useEffect(() => {
+195:  useEffect(() => {
+199:  const [isAlarmPlaying, setIsAlarmPlaying] = useState(false);
+200:  const [showMainMenu, setShowMainMenu] = useState(false);
+201:  const [showDancePopup, setShowDancePopup] = useState(false);
+202:  const [libraryItems, setLibraryItems] = useState<Array<{ url: string, prompt?: string, timestamp: number, type: 'generated' | 'photo' }>>(() => {
+231:  const isAlarmPlayingRef = useRef(false);
+232:  const alarmAudioRef = useRef<HTMLAudioElement | null>(null);
+233:  const lastTimerActionTime = useRef<number>(0);
+234:  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+236:  useEffect(() => {
+267:  useEffect(() => {
+271:  useEffect(() => {
+278:  useEffect(() => {
+282:      alarmAudioRef.current?.pause();
+287:  const wakeLockRef = useRef<any>(null);
+288:  const [wakeLockActive, setWakeLockActive] = useState(false);
+290:  useEffect(() => {
+334:  useEffect(() => {
+384:      alarmAudioRef.current.pause();
+459:      const titleToPause = payload.title?.toLowerCase() || '';
+464:          if (label.includes(titleToPause) || titleToPause.includes(label)) {
+618:  const [nonRealtimeState, setNonRealtimeState] = useState<'IDLE' | 'LISTENING' | 'THINKING' | 'SPEAKING'>('IDLE');
+619:  const [messages, setMessages] = useState<any[]>([]); // Conversation memory for Groq
+620:  const [lastHeard, setLastHeard] = useState<string>("");
+621:  const nonRealtimeStateRef = useRef<'IDLE'|'LISTENING'|'THINKING'|'SPEAKING'>('IDLE');
+623:  useEffect(() => {
+626:  const recognitionRef = useRef<any>(null);
+627:  const silenceTimeoutRef = useRef<any>(null);
+629:  const wakeWordRef = useRef<WakeWordDetector | null>(null);
+630:  const holdTimerRef = useRef<any>(null);
+631:  const connectionStateRef = useRef<AppState>(AppState.IDLE);
+632:  const thinkingAudioRef = useRef<HTMLAudioElement | null>(null);
+633:  const mbotRef = useRef<ArduinoController | null>(null);
+634:  const abortControllerRef = useRef<AbortController | null>(null);
+635:  const nonRealtimeTurnIdRef = useRef<number>(0);
+638:  const speechQueueRef = useRef<{ text: string; audio: HTMLAudioElement; pause?: number }[]>([]);
+639:  const isSpeakingRef = useRef<boolean>(false);
+640:  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+641:  const speechGenIdRef = useRef<number>(0);
+646:  const personGreetingCooldowns = useRef<Record<string, number>>((window as any).personGreetingCooldowns);
+647:  const unknownPersonCooldown = useRef<number>((window as any).unknownPersonCooldown);
+648:  const sessionEndedByToolRef = useRef<boolean>(false);
+759:  const { lastDetectedPersonXRef, isPersonPresent } = usePersonDetection(hasStarted, handlePersonDetected, 180000); // 3 minute cooldown
+760:  const finalVideo = useRollingVideoRecorder(hasStarted && airoFlags.videoContextEnabled, wakeState);
+797:  useQRDetection(qrCommanderEnabled, handleQrDetected);
+799:  useEffect(() => {
+882:  useEffect(() => {
+955:  const awaitingTextTurnReleaseRef = useRef(false);
+956:  const prevIsAiSpeakingRef = useRef(false);
+958:  useEffect(() => {
+980:  useEffect(() => {
+988:  const isMovingRef = useRef(false);
+989:  const isDancingRef = useRef(false);
+991:  useEffect(() => {
+1180:  useEffect(() => {
+1184:  useEffect(() => {
+1198:              item.audio.pause();
+1207:              currentAudioRef.current.pause();
+1272:                  audio.pause();
+1822:                      userTime: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+1823:                      userDate: new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+2089:  useEffect(() => {
+2203:  const sharedStreamRef = useRef<MediaStream | null>(null);
+2263:   useEffect(() => {
+2342:   useEffect(() => {
+2351:               thinkingAudioRef.current.pause();
+2358:  useEffect(() => {
+2424:  const touchStartY = useRef<number>(0);
+2427:  useEffect(() => {
+2439:  useEffect(() => {
+2453:  useEffect(() => {
+2554:  useEffect(() => {
+2840:                 const prompt = "The user wants to register a new family member right now. Introduce yourself (e.g. 'Hi, I am Airow!') and ask them 'What is your name?'. Once they reply with their name, you MUST use the start_face_onboarding tool. Wait for their response.";

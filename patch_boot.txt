@@ -1,0 +1,30 @@
+  useEffect(() => {
+    const checkPerms = async () => {
+      let permError = false;
+      if (!('wakeLock' in navigator)) {
+        permError = true;
+      } else {
+        try {
+          if (!wakeLockRef.current) {
+            wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+            setWakeLockActive(true);
+            wakeLockRef.current.addEventListener('release', () => {
+              wakeLockRef.current = null;
+              setWakeLockActive(false);
+            });
+          }
+        } catch (err: any) {
+          permError = true;
+          console.warn('Boot Screen Wake Lock request failed:', err.message);
+        }
+      }
+
+      setTimeout(() => {
+        if (permError) {
+          setPermissionError("AirOS cannot find these permisions: wakeLock");
+        }
+        setBootState('WAITING');
+      }, 2500);
+    };
+    checkPerms();
+  }, []);
